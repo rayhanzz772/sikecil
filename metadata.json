@@ -1,0 +1,6 @@
+{
+  "name": "Pemantau Stunting & Tumbuh Kembang",
+  "description": "Aplikasi PWA pintar pemantau tumbuh kembang anak secara mandiri berdasarkan standar WHO (HAZ & WAZ).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
