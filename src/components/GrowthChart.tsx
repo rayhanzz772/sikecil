@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   ReferenceLine
 } from 'recharts';
-import { Measurement, Gender, WHORecord } from '../types';
+import { Measurement, Gender, WHORecord, PredictionPoint } from '../types';
 import { generateWHOChartData, getInterpolatedRecord } from '../utils/whoStandards';
 
 interface GrowthChartProps {
@@ -19,9 +19,10 @@ interface GrowthChartProps {
   measurements: Measurement[];
   maxMonths: number; // 12, 24, or 60
   chartType: 'height' | 'weight' | 'head';
+  predictions?: PredictionPoint[];
 }
 
-export default function GrowthChart({ gender, measurements, maxMonths, chartType }: GrowthChartProps) {
+export default function GrowthChart({ gender, measurements, maxMonths, chartType, predictions }: GrowthChartProps) {
   const chartData = useMemo(() => {
     // 1. Generate base monthly WHO data
     const whoBase = generateWHOChartData(gender, maxMonths, chartType);
@@ -36,27 +37,60 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
         return {
           ...whoRef,
           childValue: chartType === 'height' ? m.height : chartType === 'weight' ? m.weight : m.headCircumference,
+          predictionValue: undefined as number | undefined,
           isChildPoint: true,
           dateLabel: new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
         };
       });
 
-    // 3. Combine both and sort by month
-    const combined = [...whoBase];
+    // 3. Map predictions to chart points (only if chartType is height)
+    const predPoints = chartType === 'height' && predictions
+      ? predictions
+        .filter((p) => p.age <= maxMonths)
+        .map((p) => {
+          const whoRef = getInterpolatedRecord(p.age, gender, chartType);
+          return {
+            ...whoRef,
+            predictionValue: p.height,
+            isPredictionPoint: true,
+            dateLabel: `Prediksi Usia ${p.age} Bln`
+          };
+        })
+      : [];
+
+    // Connect actual line and prediction line so they start exactly from the last measurement
+    if (childPoints.length > 0 && predPoints.length > 0) {
+      const lastChildPoint = childPoints[childPoints.length - 1];
+      // Set predictionValue so the purple line starts exactly where the blue line ends
+      lastChildPoint.predictionValue = lastChildPoint.childValue as number;
+    }
+
+    // 4. Combine both and sort by month
+    const combinedMap = new Map<number, any>();
+    
+    whoBase.forEach(wb => combinedMap.set(wb.month, { ...wb }));
     
     childPoints.forEach(cp => {
-      // Avoid duplicate exact month points if we already have them, 
-      // or just add them. Adding them as decimal age works perfectly for sorting.
-      combined.push(cp);
+      if (combinedMap.has(cp.month)) {
+        Object.assign(combinedMap.get(cp.month), cp);
+      } else {
+        combinedMap.set(cp.month, { ...cp });
+      }
     });
 
-    // Sort by month ascending
+    predPoints.forEach(pp => {
+      if (combinedMap.has(pp.month)) {
+        Object.assign(combinedMap.get(pp.month), pp);
+      } else {
+        combinedMap.set(pp.month, { ...pp });
+      }
+    });
+
+    const combined = Array.from(combinedMap.values());
     combined.sort((a, b) => a.month - b.month);
 
-    // Filter duplicates or very close points to keep chart clean if needed, 
-    // but Recharts handles sorted float X values flawlessly with a type="number" scale!
     return combined;
-  }, [gender, measurements, maxMonths, chartType]);
+  }, [gender, measurements, maxMonths, chartType, predictions]);
 
   const unit = chartType === 'height' ? 'cm' : chartType === 'weight' ? 'kg' : 'cm';
   const labelText = chartType === 'height' ? 'Tinggi Badan (cm)' : chartType === 'weight' ? 'Berat Badan (kg)' : 'Lingkar Kepala (cm)';
@@ -69,9 +103,12 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
       if ('childValue' in d && d.childValue !== undefined) {
         arr.push(d.childValue as number);
       }
+      if ('predictionValue' in d && d.predictionValue !== undefined) {
+        arr.push(d.predictionValue as number);
+      }
       return arr;
     }).flat();
-    
+
     const min = Math.floor(Math.min(...vals) - 2);
     const max = Math.ceil(Math.max(...vals) + 2);
     return [Math.max(0, min), max];
@@ -82,8 +119,8 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
     if (active && payload && payload.length) {
       // Find the child point if exists, or the hover index
       const data = payload[0].payload;
-      const ageLabel = data.month === Math.floor(data.month) 
-        ? `${data.month} Bulan` 
+      const ageLabel = data.month === Math.floor(data.month)
+        ? `${data.month} Bulan`
         : `${data.month} Bulan (${data.dateLabel || ''})`;
 
       return (
@@ -94,6 +131,12 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
               <p className="text-blue-600 font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                 Si Kecil: {data.childValue} {unit}
+              </p>
+            )}
+            {data.predictionValue !== undefined && (
+              <p className="text-purple-600 font-bold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                Prediksi AI: {Number(data.predictionValue).toFixed(1)} {unit}
               </p>
             )}
             <p className="text-slate-500 text-xs border-t border-slate-50 pt-1 mt-1">
@@ -126,112 +169,112 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
           margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#f1f5f9" />
-          <XAxis 
-            dataKey="month" 
+          <XAxis
+            dataKey="month"
             type="number"
             domain={[0, maxMonths]}
             tickCount={maxMonths <= 12 ? 13 : maxMonths === 24 ? 9 : 11}
             tick={{ fill: '#64748b', fontSize: 11 }}
             label={{ value: 'Usia (bulan)', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 11 }}
           />
-          <YAxis 
+          <YAxis
             domain={yDomain}
             tick={{ fill: '#64748b', fontSize: 11 }}
             label={{ value: labelText, angle: -90, position: 'insideLeft', offset: 10, fill: '#64748b', fontSize: 11 }}
           />
           <Tooltip content={<CustomTooltip />} />
-          
+
           {/* WHO Shaded Zones */}
           {/* Zone 3: Sangat Pendek / Kurang (< -3 SD) */}
-          <Area 
-            type="monotone" 
-            dataKey="sd3neg" 
-            fill="#fecaca" 
-            stroke="none" 
-            fillOpacity={0.4} 
+          <Area
+            type="linear"
+            dataKey="sd3neg"
+            fill="#fecaca"
+            stroke="none"
+            fillOpacity={0.4}
             legendType="none"
           />
-          
+
           {/* Zone 2: Pendek / Kurang (-3 SD to -2 SD) */}
-          <Area 
-            type="monotone" 
-            dataKey="sd2neg" 
-            fill="#fef08a" 
-            stroke="none" 
-            fillOpacity={0.4} 
+          <Area
+            type="linear"
+            dataKey="sd2neg"
+            fill="#fef08a"
+            stroke="none"
+            fillOpacity={0.4}
             legendType="none"
           />
 
           {/* Zone 1: Normal (-2 SD to +2 SD) */}
-          <Area 
-            type="monotone" 
-            dataKey="sd2pos" 
-            fill="#bbf7d0" 
-            stroke="none" 
-            fillOpacity={0.4} 
+          <Area
+            type="linear"
+            dataKey="sd2pos"
+            fill="#bbf7d0"
+            stroke="none"
+            fillOpacity={0.4}
             legendType="none"
           />
 
           {/* Lines representing standard boundaries */}
-          <Line 
-            type="monotone" 
-            dataKey="sd3pos" 
-            stroke="#ef4444" 
-            strokeWidth={1} 
-            strokeDasharray="4 4" 
-            dot={false} 
-            name="+3 SD (Batas Atas)" 
+          <Line
+            type="linear"
+            dataKey="sd3pos"
+            stroke="#ef4444"
+            strokeWidth={1}
+            strokeDasharray="4 4"
+            dot={false}
+            name="+3 SD (Batas Atas)"
           />
-          <Line 
-            type="monotone" 
-            dataKey="sd2pos" 
-            stroke="#eab308" 
-            strokeWidth={1.5} 
-            dot={false} 
-            name="+2 SD" 
+          <Line
+            type="linear"
+            dataKey="sd2pos"
+            stroke="#eab308"
+            strokeWidth={1.5}
+            dot={false}
+            name="+2 SD"
           />
-          <Line 
-            type="monotone" 
-            dataKey="median" 
-            stroke="#10b981" 
-            strokeWidth={2} 
-            strokeDasharray="4 4" 
-            dot={false} 
-            name="Median WHO (Ideal)" 
+          <Line
+            type="linear"
+            dataKey="median"
+            stroke="#10b981"
+            strokeWidth={2}
+            strokeDasharray="4 4"
+            dot={false}
+            name="Median WHO (Ideal)"
           />
-          <Line 
-            type="monotone" 
-            dataKey="sd2neg" 
-            stroke="#eab308" 
-            strokeWidth={1.5} 
-            dot={false} 
+          <Line
+            type="linear"
+            dataKey="sd2neg"
+            stroke="#eab308"
+            strokeWidth={1.5}
+            dot={false}
             name={
-              chartType === 'height' 
-                ? '-2 SD (Batas Stunting)' 
+              chartType === 'height'
+                ? '-2 SD (Batas Stunting)'
                 : chartType === 'weight'
                   ? '-2 SD (Batas Kurang)'
                   : '-2 SD (Batas Kecil)'
-            } 
+            }
           />
-          <Line 
-            type="monotone" 
-            dataKey="sd3neg" 
-            stroke="#ef4444" 
-            strokeWidth={1.5} 
-            strokeDasharray="3 3" 
-            dot={false} 
+          <Line
+            type="linear"
+            dataKey="sd3neg"
+            stroke="#ef4444"
+            strokeWidth={1.5}
+            strokeDasharray="3 3"
+            dot={false}
             name={
-              chartType === 'height' 
-                ? '-3 SD (Sangat Pendek)' 
+              chartType === 'height'
+                ? '-3 SD (Sangat Pendek)'
                 : chartType === 'weight'
                   ? '-3 SD (Sangat Kurang)'
                   : '-3 SD (Sangat Kecil)'
-            } 
+            }
           />
 
           {/* Child's actual measurements curve */}
           <Line
-            type="monotone"
+            type="linear"
             dataKey="childValue"
             stroke="#0284c7"
             strokeWidth={3.5}
@@ -240,6 +283,20 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
             name="Pertumbuhan Si Kecil"
             connectNulls={true}
           />
+
+          {/* AI Prediction Line */}
+          {chartType === 'height' && predictions && predictions.length > 0 && (
+            <Line
+              type="linear"
+              dataKey="predictionValue"
+              stroke="#a855f7"
+              strokeWidth={3.5}
+              dot={{ r: 5, fill: '#a855f7', stroke: '#ffffff', strokeWidth: 2 }}
+              activeDot={{ r: 7, fill: '#7e22ce' }}
+              name="Prediksi AI (Tinggi)"
+              connectNulls={true}
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
     </div>

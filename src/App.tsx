@@ -1,30 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Baby, 
-  Plus, 
-  Sparkles, 
-  FileDown, 
-  FileUp, 
-  Trash2, 
-  Ruler, 
-  Scale, 
-  Activity, 
-  Calendar, 
-  History, 
+import {
+  Baby,
+  Plus,
+  Sparkles,
+  FileDown,
+  FileUp,
+  Trash2,
+  Ruler,
+  Scale,
+  Activity,
+  Calendar,
+  History,
   AlertCircle,
   TrendingUp,
   UserPlus,
   ArrowRight,
   RefreshCw,
   Clock,
-  Heart
+  Heart,
+  Edit2
 } from 'lucide-react';
-import { Child, Measurement, GrowthStatus, WeightStatus } from './types';
-import { 
-  calculateAge, 
-  formatAgeText, 
-  getStuntingStatus, 
-  getWeightStatus, 
+import { Child, Measurement, GrowthStatus, WeightStatus, PredictionResponse } from './types';
+import {
+  calculateAge,
+  formatAgeText,
+  getStuntingStatus,
+  getWeightStatus,
   getInterpolatedRecord,
   getHeadCircumferenceStatus
 } from './utils/whoStandards';
@@ -44,7 +45,7 @@ const getCurrentDateMinusMonths = (months: number): string => {
 const DEFAULT_CHILDREN: Child[] = [
   {
     id: 'child-1',
-    name: 'Jaki',
+    name: 'Rafasya',
     birthDate: getCurrentDateMinusMonths(4), // Exactly 4 Months old today
     gender: 'Laki-laki',
   }
@@ -125,7 +126,10 @@ export default function App() {
   const [isChildModalOpen, setIsChildModalOpen] = useState(false);
   const [isMeasureModalOpen, setIsMeasureModalOpen] = useState(false);
   const [editingChild, setEditingChild] = useState<Child | null>(null);
+  const [editingMeasurement, setEditingMeasurement] = useState<Measurement | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
 
   // Sync state to LocalStorage
   useEffect(() => {
@@ -141,13 +145,13 @@ export default function App() {
 
   // Derived state
   const currentChild = children.find(c => c.id === selectedChildId) || children[0] || null;
-  
-  const currentMeasurements = currentChild 
+
+  const currentMeasurements = currentChild
     ? measurements.filter(m => m.childId === currentChild.id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     : [];
 
-  const latestMeasurement = currentMeasurements.length > 0 
-    ? currentMeasurements[currentMeasurements.length - 1] 
+  const latestMeasurement = currentMeasurements.length > 0
+    ? currentMeasurements[currentMeasurements.length - 1]
     : null;
 
   // Calculate stats for current child
@@ -232,6 +236,48 @@ export default function App() {
     }, 4000);
   };
 
+  const handlePredictHeight = async () => {
+    if (!currentChild) return;
+    if (currentMeasurements.length < 3) {
+      triggerStatus('Butuh minimal 3 data pengukuran untuk prediksi', 'error');
+      return;
+    }
+
+    setIsPredicting(true);
+    try {
+      const history = currentMeasurements.map(m => ({
+        age: Math.round(m.ageMonths),
+        height: m.height
+      }));
+
+      const payload = {
+        sex: currentChild.gender === 'Laki-laki' ? 'L' : 'P',
+        history,
+        horizon: 6
+      };
+
+      const response = await fetch('http://localhost:5000/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal menghubungi API');
+      }
+
+      const data = await response.json();
+      setPredictions(data);
+      triggerStatus('Prediksi berhasil dimuat', 'success');
+      setActiveChartTab('height'); // Switch to height tab to view
+    } catch (e) {
+      console.error(e);
+      triggerStatus('Gagal memproses prediksi AI', 'error');
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   // Backup data
   const handleExportData = () => {
     try {
@@ -241,7 +287,7 @@ export default function App() {
         version: '1.0',
         exportedAt: new Date().toISOString()
       };
-      
+
       const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -287,15 +333,14 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans pb-20">
-      
+
       {/* Top Banner / Toast */}
       {statusMessage && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg border text-sm font-bold animate-bounce flex items-center gap-2 ${
-          statusMessage.type === 'success' 
-            ? 'bg-emerald-600 text-white border-emerald-500' 
-            : 'bg-red-600 text-white border-red-500'
-        }`}>
-          <span>{statusMessage.type === 'success' ? '✨' : '⚠️'}</span>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg border text-sm font-bold animate-bounce flex items-center gap-2 ${statusMessage.type === 'success'
+          ? 'bg-emerald-600 text-white border-emerald-500'
+          : 'bg-red-600 text-white border-red-500'
+          }`}>
+          <span>{statusMessage.type === 'success' ? '' : ''}</span>
           {statusMessage.text}
         </div>
       )}
@@ -329,24 +374,24 @@ export default function App() {
 
             {/* Backup Action Buttons */}
             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-              <button 
+              <button
                 onClick={handleExportData}
                 title="Ekspor Cadangan"
                 className="p-2 text-slate-500 hover:text-sky-600 hover:bg-white rounded-lg transition-all"
               >
                 <FileDown className="w-4 h-4" />
               </button>
-              
-              <label 
+
+              <label
                 title="Impor Cadangan"
                 className="p-2 text-slate-500 hover:text-sky-600 hover:bg-white rounded-lg transition-all cursor-pointer block animate-pulse-slow"
               >
                 <FileUp className="w-4 h-4" />
-                <input 
-                  type="file" 
-                  accept=".json" 
-                  onChange={handleImportData} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportData}
+                  className="hidden"
                 />
               </label>
             </div>
@@ -356,20 +401,20 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 flex-1 flex flex-col gap-6 w-full">
-        
+
         {/* PWA Install Promotion Banner */}
         <PWAInstallPrompt />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-          
+
           {/* Left / Center Column: Charts and Records (Takes 2/3 space on desktop) */}
           <div className="md:col-span-2 space-y-6 flex flex-col">
-            
+
             {/* Profile Switcher Section */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pilih Profil Si Kecil</label>
-                <button 
+                <button
                   onClick={() => {
                     setEditingChild(null);
                     setIsChildModalOpen(true);
@@ -384,7 +429,7 @@ export default function App() {
               {children.length === 0 ? (
                 <div className="p-6 text-center space-y-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                   <p className="text-sm text-slate-500 font-medium">Belum ada data anak di perangkat ini.</p>
-                  <button 
+                  <button
                     onClick={() => setIsChildModalOpen(true)}
                     className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-sky-600/15"
                   >
@@ -396,11 +441,11 @@ export default function App() {
                   <select
                     value={selectedChildId}
                     onChange={(e) => setSelectedChildId(e.target.value)}
-                    className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all cursor-pointer"
+                    className="flex-1 bg-slate-50 border border-slate-200 text-slate-800 text-sm rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all cursor-pointer"
                   >
                     {children.map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.name} ({c.gender === 'Laki-laki' ? '👦 Laki-laki' : '👧 Perempuan'} • {formatAgeText(c.birthDate)})
+                        {c.name} ({c.gender === 'Laki-laki' ? 'L' : 'P'})
                       </option>
                     ))}
                   </select>
@@ -415,7 +460,7 @@ export default function App() {
                         title="Edit Profil"
                         className="p-3 bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 rounded-xl transition-all text-sm font-bold"
                       >
-                        ✏️
+                        Edit
                       </button>
                       <button
                         onClick={() => handleDeleteChild(currentChild.id)}
@@ -430,21 +475,85 @@ export default function App() {
               )}
             </div>
 
+            {/* Quick Stats Grid */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Metrik Terakhir</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {/* Card Height */}
+                <div
+                  onClick={() => setActiveChartTab('height')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'height'
+                    ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10'
+                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <Ruler className={`w-4 h-4 ${activeChartTab === 'height' ? 'text-sky-600' : 'text-slate-400'}`} />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tinggi</span>
+                    <span className="text-sm font-extrabold text-slate-800 block leading-tight">
+                      {latestMeasurement ? `${latestMeasurement.height} cm` : '--'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card Weight */}
+                <div
+                  onClick={() => setActiveChartTab('weight')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'weight'
+                    ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10'
+                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <Scale className={`w-4 h-4 ${activeChartTab === 'weight' ? 'text-sky-600' : 'text-slate-400'}`} />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Berat</span>
+                    <span className="text-sm font-extrabold text-slate-800 block leading-tight">
+                      {latestMeasurement ? `${latestMeasurement.weight} kg` : '--'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card Head */}
+                <div
+                  onClick={() => setActiveChartTab('head')}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'head'
+                    ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10'
+                    : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <Heart className={`w-4 h-4 ${activeChartTab === 'head' ? 'text-pink-600' : 'text-slate-400'}`} />
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">L. Kepala</span>
+                    <span className="text-sm font-extrabold text-slate-800 block leading-tight">
+                      {latestMeasurement?.headCircumference ? `${latestMeasurement.headCircumference} cm` : '--'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {latestMeasurement && (
+                <div className="text-center text-[10px] font-bold text-slate-400 bg-slate-50 py-1.5 rounded-lg border border-slate-200 flex items-center justify-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                  Pengukuran: {new Date(latestMeasurement.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </div>
+              )}
+            </div>
+
             {currentChild && (
               <>
                 {/* Growth Chart Section */}
                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-                  
+
                   {/* Chart Filter & Header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <h3 className="font-extrabold text-slate-800 flex items-center gap-1.5 font-display text-base">
                         <TrendingUp className="w-5 h-5 text-sky-600" />
-                        Grafik Standar WHO (HAZ / WAZ)
+                        Grafik Standar WHO
                       </h3>
                       <p className="text-xs text-slate-500 mt-0.5">Memantau tumbuh kembang anak secara mandiri</p>
                     </div>
-                    
+
                     {/* Select range dropdown */}
                     <div className="flex gap-2">
                       <select
@@ -463,33 +572,30 @@ export default function App() {
                   <div className="grid grid-cols-3 p-1 bg-slate-100 rounded-xl">
                     <button
                       onClick={() => setActiveChartTab('height')}
-                      className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${
-                        activeChartTab === 'height'
-                          ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
+                      className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${activeChartTab === 'height'
+                        ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
+                        : 'text-slate-500 hover:text-slate-800'
+                        }`}
                     >
-                      📏 Tinggi (HAZ)
+                      Tinggi
                     </button>
                     <button
                       onClick={() => setActiveChartTab('weight')}
-                      className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${
-                        activeChartTab === 'weight'
-                          ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
+                      className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${activeChartTab === 'weight'
+                        ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
+                        : 'text-slate-500 hover:text-slate-800'
+                        }`}
                     >
-                      ⚖️ Berat (WAZ)
+                      Berat
                     </button>
                     <button
                       onClick={() => setActiveChartTab('head')}
-                      className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${
-                        activeChartTab === 'head'
-                          ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
+                      className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${activeChartTab === 'head'
+                        ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
+                        : 'text-slate-500 hover:text-slate-800'
+                        }`}
                     >
-                      🧠 L. Kepala (HCFA)
+                      L. Kepala
                     </button>
                   </div>
 
@@ -500,6 +606,7 @@ export default function App() {
                       measurements={currentMeasurements}
                       maxMonths={maxMonthsFilter}
                       chartType={activeChartTab}
+                      predictions={predictions?.prediction}
                     />
                   </div>
 
@@ -529,7 +636,7 @@ export default function App() {
                   <div className="flex items-center justify-between">
                     <h3 className="font-extrabold text-slate-800 flex items-center gap-1.5 font-display text-base">
                       <History className="w-5 h-5 text-sky-600" />
-                      Riwayat Catatan Pertumbuhan
+                      Riwayat
                     </h3>
                     <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
                       Total: {currentMeasurements.length} Entri
@@ -543,7 +650,7 @@ export default function App() {
                       {currentMeasurements.slice().reverse().map(m => {
                         const hStat = getStuntingStatus(m.height, m.ageMonths, currentChild.gender);
                         const wStat = getWeightStatus(m.weight, m.ageMonths, currentChild.gender);
-                        
+
                         return (
                           <div key={m.id} className="p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200 flex items-center justify-between gap-3 transition-all text-xs group">
                             <div className="space-y-1.5">
@@ -555,27 +662,39 @@ export default function App() {
                                   {m.ageMonths === 0 ? 'Lahir' : `${m.ageMonths.toFixed(1)} bln`}
                                 </span>
                               </div>
-                              
+
                               <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 font-semibold">
-                                <span className="flex items-center gap-1">📏 Tinggi: <strong className="text-slate-800">{m.height} cm</strong> ({hStat.status})</span>
-                                <span className="flex items-center gap-1">⚖️ Berat: <strong className="text-slate-800">{m.weight} kg</strong> ({wStat.status})</span>
-                                {m.headCircumference && <span className="flex items-center gap-1">🧠 L. Kepala: <strong className="text-slate-800">{m.headCircumference} cm</strong></span>}
+                                <span className="flex items-center gap-1">Tinggi: <strong className="text-slate-800">{m.height} cm</strong> ({hStat.status})</span>
+                                <span className="flex items-center gap-1">Berat: <strong className="text-slate-800">{m.weight} kg</strong> ({wStat.status})</span>
+                                {m.headCircumference && <span className="flex items-center gap-1">L. Kepala: <strong className="text-slate-800">{m.headCircumference} cm</strong></span>}
                               </div>
 
                               {m.notes && (
                                 <p className="text-[10px] text-slate-500 italic bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 leading-relaxed mt-1">
-                                  💬 {m.notes}
+                                  Catatan: {m.notes}
                                 </p>
                               )}
                             </div>
 
-                            <button
-                              onClick={() => handleDeleteMeasurement(m.id)}
-                              className="p-2 text-slate-300 hover:text-red-500 rounded-xl hover:bg-white transition-colors"
-                              title="Hapus Catatan"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-1">
+                              <button
+                                onClick={() => {
+                                  setEditingMeasurement(m);
+                                  setIsMeasureModalOpen(true);
+                                }}
+                                className="p-2 text-slate-300 hover:text-sky-600 rounded-xl hover:bg-white transition-colors"
+                                title="Edit Catatan"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMeasurement(m.id)}
+                                className="p-2 text-slate-300 hover:text-red-500 rounded-xl hover:bg-white transition-colors"
+                                title="Hapus Catatan"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         );
                       })}
@@ -590,73 +709,6 @@ export default function App() {
           <div className="space-y-6">
             {currentChild && (
               <>
-                {/* Quick Stats Grid */}
-                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Metrik Terakhir</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {/* Card Height */}
-                    <div 
-                      onClick={() => setActiveChartTab('height')}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${
-                        activeChartTab === 'height' 
-                          ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10' 
-                          : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <Ruler className={`w-4 h-4 ${activeChartTab === 'height' ? 'text-sky-600' : 'text-slate-400'}`} />
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tinggi</span>
-                        <span className="text-sm font-extrabold text-slate-800 block leading-tight">
-                          {latestMeasurement ? `${latestMeasurement.height} cm` : '--'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Weight */}
-                    <div 
-                      onClick={() => setActiveChartTab('weight')}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${
-                        activeChartTab === 'weight' 
-                          ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10' 
-                          : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <Scale className={`w-4 h-4 ${activeChartTab === 'weight' ? 'text-sky-600' : 'text-slate-400'}`} />
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Berat</span>
-                        <span className="text-sm font-extrabold text-slate-800 block leading-tight">
-                          {latestMeasurement ? `${latestMeasurement.weight} kg` : '--'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Head */}
-                    <div 
-                      onClick={() => setActiveChartTab('head')}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${
-                        activeChartTab === 'head' 
-                          ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10' 
-                          : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex flex-col items-center gap-1">
-                        <Heart className={`w-4 h-4 ${activeChartTab === 'head' ? 'text-pink-600' : 'text-slate-400'}`} />
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">L. Kepala</span>
-                        <span className="text-sm font-extrabold text-slate-800 block leading-tight">
-                          {latestMeasurement?.headCircumference ? `${latestMeasurement.headCircumference} cm` : '--'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {latestMeasurement && (
-                    <div className="text-center text-[10px] font-bold text-slate-400 bg-slate-50 py-1.5 rounded-lg border border-slate-200 flex items-center justify-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      Pengukuran: {new Date(latestMeasurement.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </div>
-                  )}
-                </div>
-
                 {/* Analysis Box */}
                 {latestMeasurement && (
                   <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
@@ -672,7 +724,7 @@ export default function App() {
                         <span className="text-slate-500 font-semibold">Usia Pengukuran</span>
                         <span className="font-bold text-slate-800">{formatAgeText(currentChild.birthDate, latestMeasurement.date)}</span>
                       </div>
-                      
+
                       {activeChartTab === 'height' && stuntingAnalysis && (
                         <>
                           <div className="flex items-center justify-between text-xs border-t border-slate-150 pt-2">
@@ -720,7 +772,7 @@ export default function App() {
 
                       {activeChartTab === 'head' && !headAnalysis && (
                         <div className="text-xs text-amber-600 bg-amber-50/50 p-2.5 rounded-lg border border-amber-100 mt-2 text-center font-semibold">
-                          ⚠️ Data lingkar kepala belum dicatatkan untuk pengukuran terbaru ini.
+                          Data lingkar kepala belum dicatatkan untuk pengukuran terbaru ini.
                         </div>
                       )}
                     </div>
@@ -730,16 +782,16 @@ export default function App() {
                       {activeChartTab === 'height' && stuntingAnalysis && (
                         <>
                           {stuntingAnalysis.status === 'Normal' && (
-                            <p>👍 <strong>Pertumbuhan anak normal dan optimal!</strong> Teruskan pemberian ASI eksklusif/MPASI bergizi seimbang, imunisasi lengkap, dan pemantauan berkala di posyandu.</p>
+                            <p><strong>Pertumbuhan anak normal dan optimal!</strong> Teruskan pemberian ASI eksklusif/MPASI bergizi seimbang, imunisasi lengkap, dan pemantauan berkala di posyandu.</p>
                           )}
                           {stuntingAnalysis.status === 'Pendek' && (
-                            <p>⚠️ <strong>Perhatian (Stunted/Pendek):</strong> Anak berada di bawah batas normal standar WHO. Direkomendasikan menambah asupan protein hewani (telur, ikan, daging) dan berkonsultasi dengan puskesmas/dokter anak.</p>
+                            <p><strong>Perhatian (Stunted/Pendek):</strong> Anak berada di bawah batas normal standar WHO. Direkomendasikan menambah asupan protein hewani (telur, ikan, daging) dan berkonsultasi dengan puskesmas/dokter anak.</p>
                           )}
                           {stuntingAnalysis.status === 'Sangat Pendek' && (
-                            <p>🚨 <strong>Peringatan Keras (Severely Stunted):</strong> Anak terindikasi stunting berat. Mohon segera jadwalkan pemeriksaan medis di Puskesmas atau Dokter Anak terdekat untuk penanganan gizi darurat.</p>
+                            <p><strong>Peringatan Keras (Severely Stunted):</strong> Anak terindikasi stunting berat. Mohon segera jadwalkan pemeriksaan medis di Puskesmas atau Dokter Anak terdekat untuk penanganan gizi darurat.</p>
                           )}
                           {stuntingAnalysis.status === 'Tinggi' && (
-                            <p>🌟 <strong>Pertumbuhan tinggi badan di atas rata-rata!</strong> Tetap jaga asupan nutrisi makro & mikro seimbang untuk mendukung aktivitas fisiknya.</p>
+                            <p><strong>Pertumbuhan tinggi badan di atas rata-rata!</strong> Tetap jaga asupan nutrisi makro & mikro seimbang untuk mendukung aktivitas fisiknya.</p>
                           )}
                         </>
                       )}
@@ -747,16 +799,16 @@ export default function App() {
                       {activeChartTab === 'weight' && weightAnalysis && (
                         <>
                           {weightAnalysis.status === 'Normal' && (
-                            <p>👍 <strong>Berat badan anak ideal!</strong> Menandakan asupan gizi harian tercukupi dengan baik sesuai grafik acuan tumbuh kembang.</p>
+                            <p><strong>Berat badan anak ideal!</strong> Menandakan asupan gizi harian tercukupi dengan baik sesuai grafik acuan tumbuh kembang.</p>
                           )}
                           {weightAnalysis.status === 'Kurang' && (
-                            <p>⚠️ <strong>Berat Badan Kurang (Underweight):</strong> Berisiko kekurangan gizi akut. Berikan makanan padat energi, tingkatkan frekuensi menyusui, dan pantau kenaikan berat badan tiap minggu.</p>
+                            <p><strong>Berat Badan Kurang (Underweight):</strong> Berisiko kekurangan gizi akut. Berikan makanan padat energi, tingkatkan frekuensi menyusui, dan pantau kenaikan berat badan tiap minggu.</p>
                           )}
                           {weightAnalysis.status === 'Sangat Kurang' && (
-                            <p>🚨 <strong>Berat Badan Sangat Kurang:</strong> Indikasi wasting / gizi buruk. Segera bawa anak ke faskes untuk diperiksa kondisi klinis dan menerima formula makanan pemulihan.</p>
+                            <p><strong>Berat Badan Sangat Kurang:</strong> Indikasi wasting / gizi buruk. Segera bawa anak ke faskes untuk diperiksa kondisi klinis dan menerima formula makanan pemulihan.</p>
                           )}
                           {weightAnalysis.status === 'Risiko Berat Badan Lebih' && (
-                            <p>⚖️ <strong>Risiko Berat Badan Lebih:</strong> Batasi asupan pemanis buatan, atur jadwal makan beraturan, dan dukung motorik kasar anak agar tetap aktif bergerak.</p>
+                            <p><strong>Risiko Berat Badan Lebih:</strong> Batasi asupan pemanis buatan, atur jadwal makan beraturan, dan dukung motorik kasar anak agar tetap aktif bergerak.</p>
                           )}
                         </>
                       )}
@@ -764,22 +816,73 @@ export default function App() {
                       {activeChartTab === 'head' && headAnalysis && (
                         <>
                           {headAnalysis.status === 'Normal' && (
-                            <p>👍 <strong>Lingkar kepala anak normal!</strong> Menunjukkan perkembangan otak dan tengkorak kepala berjalan dengan sangat optimal sesuai usianya.</p>
+                            <p><strong>Lingkar kepala anak normal!</strong> Menunjukkan perkembangan otak dan tengkorak kepala berjalan dengan sangat optimal sesuai usianya.</p>
                           )}
                           {headAnalysis.status === 'Kecil' && (
-                            <p>⚠️ <strong>Lingkar Kepala Kecil (Risiko Mikrosefali):</strong> Ukuran kepala di bawah batas ideal. Direkomendasikan berkonsultasi dengan dokter anak untuk pemantauan tumbuh kembang saraf sensorik dan motorik secara teliti.</p>
+                            <p><strong>Lingkar Kepala Kecil (Risiko Mikrosefali):</strong> Ukuran kepala di bawah batas ideal. Direkomendasikan berkonsultasi dengan dokter anak untuk pemantauan tumbuh kembang saraf sensorik dan motorik secara teliti.</p>
                           )}
                           {headAnalysis.status === 'Sangat Kecil' && (
-                            <p>🚨 <strong>Lingkar Kepala Sangat Kecil:</strong> Terindikasi keterlambatan pertumbuhan tengkorak/otak. Segera bawa anak ke faskes atau dokter spesialis anak terdekat untuk pemeriksaan menyeluruh.</p>
+                            <p><strong>Lingkar Kepala Sangat Kecil:</strong> Terindikasi keterlambatan pertumbuhan tengkorak/otak. Segera bawa anak ke faskes atau dokter spesialis anak terdekat untuk pemeriksaan menyeluruh.</p>
                           )}
                           {headAnalysis.status === 'Sangat Besar' && (
-                            <p>⚖️ <strong>Lingkar Kepala Sangat Besar (Risiko Makrosefali):</strong> Di atas rata-rata rujukan WHO. Segera konsultasikan ke dokter anak untuk memastikannya normal secara genetik atau membutuhkan penanganan medis khusus.</p>
+                            <p><strong>Lingkar Kepala Sangat Besar (Risiko Makrosefali):</strong> Di atas rata-rata rujukan WHO. Segera konsultasikan ke dokter anak untuk memastikannya normal secara genetik atau membutuhkan penanganan medis khusus.</p>
                           )}
                         </>
                       )}
 
                       {activeChartTab === 'head' && !headAnalysis && (
-                        <p>💡 <strong>Tips L. Kepala:</strong> Rutin mengukur lingkar kepala anak di bawah 2 tahun sangat penting untuk mendeteksi dini gangguan tumbuh kembang otak (mikrosefali / makrosefali).</p>
+                        <p><strong>Tips L. Kepala:</strong> Rutin mengukur lingkar kepala anak di bawah 2 tahun sangat penting untuk mendeteksi dini gangguan tumbuh kembang otak (mikrosefali / makrosefali).</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Prediction Card */}
+                {activeChartTab === 'height' && currentChild && (
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-purple-200 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-extrabold text-slate-800 flex items-center gap-1.5 font-display text-sm">
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                        Prediksi AI Tinggi Badan
+                      </h3>
+                    </div>
+
+                    <div className="p-3.5 bg-purple-50/50 rounded-xl space-y-3 border border-purple-100">
+                      <p className="text-xs text-slate-600">
+                        Prediksi tinggi badan anak 6 bulan ke depan menggunakan model Machine Learning berdasarkan riwayat pertumbuhannya.
+                      </p>
+
+                      <button
+                        onClick={handlePredictHeight}
+                        disabled={isPredicting}
+                        className={`w-full py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${
+                          isPredicting ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                        }`}
+                      >
+                        {isPredicting ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Memproses AI...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            Prediksi Sekarang
+                          </>
+                        )}
+                      </button>
+
+                      {predictions && predictions.success && (
+                        <div className="pt-3 border-t border-purple-200/60 space-y-2 mt-2 text-xs">
+                          <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
+                            <span className="text-slate-500 font-semibold">Model AI</span>
+                            <span className="font-bold text-purple-700">{predictions.selected_model}</span>
+                          </div>
+                          <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
+                            <span className="text-slate-500 font-semibold">Error (MAE)</span>
+                            <span className="font-bold text-slate-700">{predictions.metrics[predictions.selected_model]?.mae.toFixed(3)} cm</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -801,7 +904,7 @@ export default function App() {
                     <div className="bg-white/20 p-3.5 rounded-xl backdrop-blur-sm border border-white/10">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-white/30 flex items-center justify-center font-bold text-sm">
-                          📅
+                          *
                         </div>
                         <div>
                           <p className="text-[9px] uppercase font-bold opacity-75">Jadwal Posyandu Terdekat</p>
@@ -826,7 +929,10 @@ export default function App() {
       {currentChild && (
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent z-20 flex justify-center pointer-events-none">
           <button
-            onClick={() => setIsMeasureModalOpen(true)}
+            onClick={() => {
+              setEditingMeasurement(null);
+              setIsMeasureModalOpen(true);
+            }}
             className="w-full max-w-md px-6 py-4 bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-sky-600/30 cursor-pointer pointer-events-auto"
           >
             <Plus className="w-5 h-5" />
@@ -851,6 +957,7 @@ export default function App() {
           onSave={handleSaveMeasurement}
           selectedChild={currentChild}
           latestMeasurement={latestMeasurement}
+          editingMeasurement={editingMeasurement}
         />
       )}
     </div>

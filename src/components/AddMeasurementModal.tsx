@@ -9,9 +9,10 @@ interface AddMeasurementModalProps {
   onSave: (measurement: Omit<Measurement, 'id' | 'ageMonths'> & { id?: string }) => void;
   selectedChild: Child;
   latestMeasurement?: Measurement | null;
+  editingMeasurement?: Measurement | null;
 }
 
-export default function AddMeasurementModal({ isOpen, onClose, onSave, selectedChild, latestMeasurement }: AddMeasurementModalProps) {
+export default function AddMeasurementModal({ isOpen, onClose, onSave, selectedChild, latestMeasurement, editingMeasurement }: AddMeasurementModalProps) {
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [headCirc, setHeadCirc] = useState('');
@@ -21,21 +22,29 @@ export default function AddMeasurementModal({ isOpen, onClose, onSave, selectedC
 
   useEffect(() => {
     if (isOpen) {
-      setDate(new Date().toISOString().split('T')[0]);
-      if (latestMeasurement) {
-        setHeight(latestMeasurement.height.toString());
-        setWeight(latestMeasurement.weight.toString());
-        setHeadCirc(latestMeasurement.headCircumference ? latestMeasurement.headCircumference.toString() : '');
-        setNotes('');
+      if (editingMeasurement) {
+        setDate(editingMeasurement.date);
+        setHeight(editingMeasurement.height.toString());
+        setWeight(editingMeasurement.weight.toString());
+        setHeadCirc(editingMeasurement.headCircumference ? editingMeasurement.headCircumference.toString() : '');
+        setNotes(editingMeasurement.notes || '');
       } else {
-        setHeight('');
-        setWeight('');
-        setHeadCirc('');
-        setNotes('');
+        setDate(new Date().toISOString().split('T')[0]);
+        if (latestMeasurement) {
+          setHeight(latestMeasurement.height.toString());
+          setWeight(latestMeasurement.weight.toString());
+          setHeadCirc(latestMeasurement.headCircumference ? latestMeasurement.headCircumference.toString() : '');
+          setNotes('');
+        } else {
+          setHeight('');
+          setWeight('');
+          setHeadCirc('');
+          setNotes('');
+        }
       }
       setError('');
     }
-  }, [isOpen, latestMeasurement]);
+  }, [isOpen, latestMeasurement, editingMeasurement]);
 
   if (!isOpen) return null;
 
@@ -80,6 +89,7 @@ export default function AddMeasurementModal({ isOpen, onClose, onSave, selectedC
     }
 
     onSave({
+      id: editingMeasurement ? editingMeasurement.id : undefined,
       childId: selectedChild.id,
       date,
       height: parsedHeight,
@@ -113,7 +123,7 @@ export default function AddMeasurementModal({ isOpen, onClose, onSave, selectedC
           <div className="flex items-center gap-2">
             <Plus className="w-5 h-5 text-sky-600" />
             <h3 className="font-bold text-slate-850 text-lg">
-              Catat Tumbuh Kembang
+              {editingMeasurement ? 'Edit Catatan' : 'Catat Tumbuh Kembang'}
             </h3>
           </div>
           <button 

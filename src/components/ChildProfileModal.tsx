@@ -110,7 +110,7 @@ export default function ChildProfileModal({ isOpen, onClose, onSave, initialChil
                     : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100'
                 }`}
               >
-                <span className="text-lg">👦</span> Laki-laki
+                Laki-laki
               </button>
               <button
                 type="button"
@@ -121,7 +121,7 @@ export default function ChildProfileModal({ isOpen, onClose, onSave, initialChil
                     : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-slate-100'
                 }`}
               >
-                <span className="text-lg">👧</span> Perempuan
+                Perempuan
               </button>
             </div>
           </div>
