@@ -369,7 +369,7 @@ export default function App() {
                 {currentChild ? currentChild.name.charAt(0).toUpperCase() : 'R'}
               </div>
               <div className="flex flex-col text-left">
-                <span className="text-xs font-semibold text-slate-700">rayhanzz772@gmail.com</span>
+                <span className="text-xs font-semibold text-slate-700">istiqomahzn@gmail.com</span>
                 <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Ibu Terhubung</span>
               </div>
             </div>
