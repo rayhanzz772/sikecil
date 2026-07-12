@@ -41,6 +41,8 @@ const getCurrentDateMinusMonths = (months: number): string => {
   return d.toISOString().split('T')[0];
 };
 
+const api_url_predict = 'http://localhost:5000/api/predict/v3';
+
 // Seed Data
 const DEFAULT_CHILDREN: Child[] = [
   {
@@ -256,7 +258,7 @@ export default function App() {
         horizon: 6
       };
 
-      const response = await fetch('http://localhost:5000/api/predict', {
+      const response = await fetch(api_url_predict, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -855,9 +857,8 @@ export default function App() {
                       <button
                         onClick={handlePredictHeight}
                         disabled={isPredicting}
-                        className={`w-full py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${
-                          isPredicting ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
-                        }`}
+                        className={`w-full py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${isPredicting ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                          }`}
                       >
                         {isPredicting ? (
                           <>
@@ -880,7 +881,7 @@ export default function App() {
                           </div>
                           <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
                             <span className="text-slate-500 font-semibold">Error (MAE)</span>
-                            <span className="font-bold text-slate-700">{predictions.metrics[predictions.selected_model]?.mae.toFixed(3)} cm</span>
+                            <span className="font-bold text-slate-700">{predictions.metrics?.[predictions.selected_model]?.mae?.toFixed(3) ?? '—'} cm</span>
                           </div>
                         </div>
                       )}
