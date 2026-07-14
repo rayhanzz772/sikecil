@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Baby,
   Plus,
+  BookOpen,
   Sparkles,
   FileDown,
   FileUp,
@@ -33,6 +34,10 @@ import GrowthChart from './components/GrowthChart';
 import ChildProfileModal from './components/ChildProfileModal';
 import AddMeasurementModal from './components/AddMeasurementModal';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import RiwayatSection from './components/RiwayatSection';
+import BookGuideModal from './components/BookGuideModal';
+import FamilyProfileModal from "./components/FamilyProfileModal";
+
 
 // Dynamic Date Generator based on Current Time
 const getCurrentDateMinusMonths = (months: number): string => {
@@ -106,6 +111,11 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
   }
 ];
 
+interface FamilyProfile {
+  motherName: string;
+  posyanduDesa: string;
+  bidanName: string;
+}
 export default function App() {
   // LocalStorage state initialization
   const [children, setChildren] = useState<Child[]>(() => {
@@ -132,7 +142,20 @@ export default function App() {
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [currentPage, setCurrentPage] = useState<'dashboard' | 'riwayat'>('dashboard');
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
 
+  const [familyProfile, setFamilyProfile] = useState<FamilyProfile>(() => {
+    const saved = localStorage.getItem("sikecil-family");
+
+    return saved
+      ? JSON.parse(saved)
+      : {
+          motherName: "",
+          posyanduDesa: "",
+          bidanName: "",
+        };
+  });
   // Sync state to LocalStorage
   useEffect(() => {
     localStorage.setItem('sikecil-children', JSON.stringify(children));
@@ -145,6 +168,15 @@ export default function App() {
     localStorage.setItem('sikecil-measurements', JSON.stringify(measurements));
   }, [measurements]);
 
+  useEffect(() => {
+    localStorage.setItem(
+      "sikecil-family",
+      JSON.stringify(familyProfile)
+    );
+  }, [familyProfile]);
+
+  const [isFamilyModalOpen, setIsFamilyModalOpen] =
+    useState(false);
   // Derived state
   const currentChild = children.find(c => c.id === selectedChildId) || children[0] || null;
 
@@ -169,6 +201,7 @@ export default function App() {
     ? getHeadCircumferenceStatus(latestMeasurement.headCircumference, latestMeasurement.ageMonths, currentChild.gender)
     : null;
 
+    
   // Manage child saving
   const handleSaveChild = (childData: Omit<Child, 'id'> & { id?: string }) => {
     if (childData.id) {
@@ -360,42 +393,21 @@ export default function App() {
               </h1>
               <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Cegah & Pantau Stunting</p>
             </div>
+            
           </div>
 
           <div className="flex items-center gap-4">
-            {/* User Profile Badge */}
-            <div className="hidden sm:flex items-center gap-3 bg-slate-100 px-4 py-2 rounded-full border border-slate-200">
-              <div className="w-7 h-7 rounded-full bg-sky-100 border-2 border-white flex items-center justify-center font-extrabold text-sky-700 text-xs">
-                {currentChild ? currentChild.name.charAt(0).toUpperCase() : 'R'}
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-semibold text-slate-700">istiqomahzn@gmail.com</span>
-                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Ibu Terhubung</span>
-              </div>
-            </div>
+           
 
-            {/* Backup Action Buttons */}
+            {/* Backup & Add Data Action Buttons */}
             <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
-              <button
-                onClick={handleExportData}
-                title="Ekspor Cadangan"
-                className="p-2 text-slate-500 hover:text-sky-600 hover:bg-white rounded-lg transition-all"
-              >
-                <FileDown className="w-4 h-4" />
-              </button>
 
-              <label
-                title="Impor Cadangan"
-                className="p-2 text-slate-500 hover:text-sky-600 hover:bg-white rounded-lg transition-all cursor-pointer block animate-pulse-slow"
-              >
-                <FileUp className="w-4 h-4" />
-                <input
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportData}
-                  className="hidden"
-                />
-              </label>
+            <button
+            onClick={()=>setIsBookModalOpen(true)}
+            >
+            <BookOpen/>
+            </button>
+
             </div>
           </div>
         </div>
@@ -407,13 +419,55 @@ export default function App() {
         {/* PWA Install Promotion Banner */}
         <PWAInstallPrompt />
 
+        {currentPage === 'riwayat' && currentChild ? (
+          <RiwayatSection
+            child={currentChild}
+            measurements={currentMeasurements}
+            onBack={() => setCurrentPage('dashboard')}
+            onEdit={(m) => { setEditingMeasurement(m); setIsMeasureModalOpen(true); }}
+            onDelete={handleDeleteMeasurement}
+          />
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
 
           {/* Left / Center Column: Charts and Records (Takes 2/3 space on desktop) */}
           <div className="md:col-span-2 space-y-6 flex flex-col">
 
             {/* Profile Switcher Section */}
+            {/* KARTU 1: Profil Ibu + Pilih Profil Si Kecil (digabung 1 kartu) */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+
+              {/* Bagian atas: Profil Ibu & Posyandu */}
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-sky-100 border-2 border-white shadow flex items-center justify-center text-sky-700 font-extrabold text-lg shrink-0">
+                  {familyProfile.motherName ? familyProfile.motherName.charAt(0).toUpperCase() : <Heart className="w-6 h-6" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {familyProfile.motherName ? (
+                    <>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ibu dari Si Kecil</p>
+                      <p className="text-slate-800 font-extrabold text-base truncate">{familyProfile.motherName}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 truncate">{familyProfile.posyanduDesa} · Bidan {familyProfile.bidanName}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Profil Ibu</p>
+                      <p className="text-sm text-slate-400">Belum diisi</p>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsFamilyModalOpen(true)}
+                  className="text-xs font-bold text-sky-600 hover:text-sky-700 transition-colors shrink-0"
+                >
+                  {familyProfile.motherName ? 'Edit' : 'Lengkapi'}
+                </button>
+              </div>
+
+              {/* Garis pemisah */}
+              <div className="border-t border-slate-100"></div>
+
+              {/* Bagian bawah: Pilih Profil Si Kecil (persis seperti sebelumnya) */}
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pilih Profil Si Kecil</label>
                 <button
@@ -428,6 +482,7 @@ export default function App() {
                 </button>
               </div>
 
+  
               {children.length === 0 ? (
                 <div className="p-6 text-center space-y-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                   <p className="text-sm text-slate-500 font-medium">Belum ada data anak di perangkat ini.</p>
@@ -479,7 +534,30 @@ export default function App() {
 
             {/* Quick Stats Grid */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Metrik Terakhir</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Metrik Terakhir</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setEditingMeasurement(null);
+                      setIsMeasureModalOpen(true);
+                    }}
+                    disabled={!currentChild}
+                    title="Tambah Data Pertumbuhan"
+                    className="p-2 text-white bg-sky-600 hover:bg-sky-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-all"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage('riwayat')}
+                    disabled={!currentChild}
+                    title="Lihat Riwayat"
+                    className="p-2 text-sky-600 bg-sky-50 hover:bg-sky-100 disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed rounded-lg border border-sky-100 transition-all"
+                  >
+                    <History className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 {/* Card Height */}
                 <div
@@ -495,6 +573,13 @@ export default function App() {
                     <span className="text-sm font-extrabold text-slate-800 block leading-tight">
                       {latestMeasurement ? `${latestMeasurement.height} cm` : '--'}
                     </span>
+                    {stuntingAnalysis && (
+                      <span
+                        className={`mt-2 px-2 py-1 rounded-full text-[10px] font-bold ${stuntingAnalysis.colorClass}`}
+                      >
+                        {stuntingAnalysis.status}
+                      </span>
+                  )}
                   </div>
                 </div>
 
@@ -512,6 +597,13 @@ export default function App() {
                     <span className="text-sm font-extrabold text-slate-800 block leading-tight">
                       {latestMeasurement ? `${latestMeasurement.weight} kg` : '--'}
                     </span>
+                    {weightAnalysis && (
+                      <span
+                        className={`mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${weightAnalysis.colorClass}`}
+                      >
+                          {weightAnalysis.status}
+                      </span>
+                  )}
                   </div>
                 </div>
 
@@ -529,6 +621,13 @@ export default function App() {
                     <span className="text-sm font-extrabold text-slate-800 block leading-tight">
                       {latestMeasurement?.headCircumference ? `${latestMeasurement.headCircumference} cm` : '--'}
                     </span>
+                    {headAnalysis && (
+                      <span
+                        className={`mt-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${headAnalysis.colorClass}`}
+                      >
+                          {headAnalysis.status}
+                      </span>
+                  )}
                   </div>
                 </div>
               </div>
@@ -631,77 +730,46 @@ export default function App() {
                       Pertumbuhan Anak
                     </div>
                   </div>
-                </div>
 
-                {/* Historical Entries Logs */}
-                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-extrabold text-slate-800 flex items-center gap-1.5 font-display text-base">
-                      <History className="w-5 h-5 text-sky-600" />
-                      Riwayat
-                    </h3>
-                    <span className="text-xs font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
-                      Total: {currentMeasurements.length} Entri
-                    </span>
+                  {/* Tombol ke halaman Riwayat (pengganti kartu Riwayat lama) */}
+                  {/* Prediksi AI Tinggi Badan */}
+                {activeChartTab === 'height' && (
+                  <div className="p-3.5 bg-purple-50/50 rounded-xl space-y-3 border border-purple-100">
+                    
+
+                    <button
+                      onClick={handlePredictHeight}
+                      disabled={isPredicting}
+                      className={`w-full py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${isPredicting ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
+                        }`}
+                    >
+                      {isPredicting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Memproses AI...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Prediksi Sekarang
+                        </>
+                      )}
+                    </button>
+
+                    {predictions && predictions.success && (
+                      <div className="pt-3 border-t border-purple-200/60 space-y-2 mt-2 text-xs">
+                        <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
+                          <span className="text-slate-500 font-semibold">Model AI</span>
+                          <span className="font-bold text-purple-700">{predictions.selected_model}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
+                          <span className="text-slate-500 font-semibold">Error (MAE)</span>
+                          <span className="font-bold text-slate-700">{predictions.metrics?.[predictions.selected_model]?.mae?.toFixed(3) ?? '—'} cm</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-
-                  {currentMeasurements.length === 0 ? (
-                    <p className="text-xs text-slate-400 text-center py-6">Belum ada riwayat tercatat untuk profil ini.</p>
-                  ) : (
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                      {currentMeasurements.slice().reverse().map(m => {
-                        const hStat = getStuntingStatus(m.height, m.ageMonths, currentChild.gender);
-                        const wStat = getWeightStatus(m.weight, m.ageMonths, currentChild.gender);
-
-                        return (
-                          <div key={m.id} className="p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-xl border border-slate-200 flex items-center justify-between gap-3 transition-all text-xs group">
-                            <div className="space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-850 text-sm">
-                                  {new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                </span>
-                                <span className="text-[10px] text-sky-700 font-bold bg-sky-50 px-2.5 py-0.5 rounded-full border border-sky-100">
-                                  {m.ageMonths === 0 ? 'Lahir' : `${m.ageMonths.toFixed(1)} bln`}
-                                </span>
-                              </div>
-
-                              <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-slate-600 font-semibold">
-                                <span className="flex items-center gap-1">Tinggi: <strong className="text-slate-800">{m.height} cm</strong> ({hStat.status})</span>
-                                <span className="flex items-center gap-1">Berat: <strong className="text-slate-800">{m.weight} kg</strong> ({wStat.status})</span>
-                                {m.headCircumference && <span className="flex items-center gap-1">L. Kepala: <strong className="text-slate-800">{m.headCircumference} cm</strong></span>}
-                              </div>
-
-                              {m.notes && (
-                                <p className="text-[10px] text-slate-500 italic bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 leading-relaxed mt-1">
-                                  Catatan: {m.notes}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row gap-1">
-                              <button
-                                onClick={() => {
-                                  setEditingMeasurement(m);
-                                  setIsMeasureModalOpen(true);
-                                }}
-                                className="p-2 text-slate-300 hover:text-sky-600 rounded-xl hover:bg-white transition-colors"
-                                title="Edit Catatan"
-                              >
-                                <Edit2 className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteMeasurement(m.id)}
-                                className="p-2 text-slate-300 hover:text-red-500 rounded-xl hover:bg-white transition-colors"
-                                title="Hapus Catatan"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                )}
                 </div>
               </>
             )}
@@ -839,56 +907,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* AI Prediction Card */}
-                {activeChartTab === 'height' && currentChild && (
-                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-purple-200 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-extrabold text-slate-800 flex items-center gap-1.5 font-display text-sm">
-                        <Sparkles className="w-4 h-4 text-purple-600" />
-                        Prediksi AI Tinggi Badan
-                      </h3>
-                    </div>
-
-                    <div className="p-3.5 bg-purple-50/50 rounded-xl space-y-3 border border-purple-100">
-                      <p className="text-xs text-slate-600">
-                        Prediksi tinggi badan anak 6 bulan ke depan menggunakan model Machine Learning berdasarkan riwayat pertumbuhannya.
-                      </p>
-
-                      <button
-                        onClick={handlePredictHeight}
-                        disabled={isPredicting}
-                        className={`w-full py-2.5 text-xs font-bold text-white rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${isPredicting ? 'bg-purple-400 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
-                          }`}
-                      >
-                        {isPredicting ? (
-                          <>
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            Memproses AI...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4" />
-                            Prediksi Sekarang
-                          </>
-                        )}
-                      </button>
-
-                      {predictions && predictions.success && (
-                        <div className="pt-3 border-t border-purple-200/60 space-y-2 mt-2 text-xs">
-                          <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
-                            <span className="text-slate-500 font-semibold">Model AI</span>
-                            <span className="font-bold text-purple-700">{predictions.selected_model}</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
-                            <span className="text-slate-500 font-semibold">Error (MAE)</span>
-                            <span className="font-bold text-slate-700">{predictions.metrics?.[predictions.selected_model]?.mae?.toFixed(3) ?? '—'} cm</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {/* Advice Card with Gorgeous Gradient Background */}
                 <div className="bg-gradient-to-br from-sky-600 to-indigo-700 rounded-2xl shadow-lg shadow-sky-600/10 p-6 text-white relative overflow-hidden">
                   <div className="relative z-10 space-y-4">
@@ -924,23 +942,8 @@ export default function App() {
           </div>
 
         </div>
+        )}
       </main>
-
-      {/* Floating Call to Action button at the absolute bottom center */}
-      {currentChild && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent z-20 flex justify-center pointer-events-none">
-          <button
-            onClick={() => {
-              setEditingMeasurement(null);
-              setIsMeasureModalOpen(true);
-            }}
-            className="w-full max-w-md px-6 py-4 bg-sky-600 hover:bg-sky-700 active:scale-[0.98] text-white font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-sky-600/30 cursor-pointer pointer-events-auto"
-          >
-            <Plus className="w-5 h-5" />
-            Catat Data Pertumbuhan Baru
-          </button>
-        </div>
-      )}
 
       {/* Child Profile Modal */}
       <ChildProfileModal
@@ -961,6 +964,18 @@ export default function App() {
           editingMeasurement={editingMeasurement}
         />
       )}
+
+      {/* Book Guide Modal */}
+      <BookGuideModal
+        isOpen={isBookModalOpen}
+        onClose={() => setIsBookModalOpen(false)}
+      />
+      <FamilyProfileModal
+          isOpen={isFamilyModalOpen}
+          onClose={() => setIsFamilyModalOpen(false)}
+          profile={familyProfile}
+          onSave={(data) => setFamilyProfile(data)}
+      />
     </div>
   );
 }
