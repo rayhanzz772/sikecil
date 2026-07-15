@@ -1,12 +1,12 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  LayoutDashboard, 
-  Users, 
-  MapPin, 
-  Building2, 
-  Baby, 
+import {
+  LayoutDashboard,
+  Users,
+  MapPin,
+  Building2,
+  Baby,
   FileText,
   Activity,
   LogOut,
@@ -16,7 +16,7 @@ import {
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  
+
   const adminLinks = [
     { to: '/admin/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/admin/roles', icon: <ShieldCheck size={20} />, label: 'Role Management' },
@@ -48,16 +48,15 @@ export const Sidebar: React.FC = () => {
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{user?.role === 'admin' ? 'Admin Panel' : 'Posyandu Panel'}</p>
         </div>
       </div>
-      
+
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         {links.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
-            className={({ isActive }) => 
-              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                isActive 
-                ? 'bg-sky-50 text-sky-700' 
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${isActive
+                ? 'bg-sky-50 text-sky-700'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
               }`
             }
@@ -78,7 +77,7 @@ export const Sidebar: React.FC = () => {
             <p className="text-[10px] font-semibold text-slate-500 uppercase">{user?.role}</p>
           </div>
         </div>
-        <button 
+        <button
           onClick={logout}
           className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors"
         >

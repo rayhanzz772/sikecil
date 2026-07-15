@@ -9,6 +9,10 @@ export interface User {
   role: Role;
   name?: string;
   email?: string;
+  posyandu?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface AuthContextType {

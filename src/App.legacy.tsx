@@ -20,7 +20,9 @@ import {
   Clock,
   Heart,
   Edit2,
-  LogOut
+  LogOut,
+  Building2,
+  Settings
 } from 'lucide-react';
 import { Child, Measurement, GrowthStatus, WeightStatus, PredictionResponse } from './types';
 import {
@@ -140,7 +142,7 @@ interface FamilyProfile {
 }
 export default function App() {
   const { user, logout } = useAuth();
-  
+
   // LocalStorage state initialization
   const [children, setChildren] = useState<Child[]>(() => {
     const saved = localStorage.getItem('sikecil-children');
@@ -455,33 +457,32 @@ export default function App() {
 
           <div className="flex items-center gap-4">
 
-            {/* Profile and Logout for Logged-in Users */}
-            {user && (
-              <div className="flex items-center gap-4 mr-2 border-r border-slate-200 pr-4">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-slate-800">{user.name || user.username || 'Orang Tua'}</p>
-                  <p className="text-[10px] font-semibold text-slate-500 uppercase">{user.role}</p>
-                </div>
-                <button 
-                  onClick={logout}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-                >
-                  <LogOut size={16} />
-                  <span className="hidden sm:inline">Keluar</span>
-                </button>
-              </div>
-            )}
-
             {/* Backup & Add Data Action Buttons */}
-            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-1 p-1 rounded-xl border border-slate-200">
 
               <button
                 onClick={() => setIsBookModalOpen(true)}
               >
-                <BookOpen className="w-5 h-5 text-slate-600" />
+                <BookOpen className="w-5 h-5 text-slate-600 hover:text-sky-600" />
               </button>
 
             </div>
+
+            {/* Profile and Logout for Logged-in Users */}
+            {user && (
+              <>
+                <div className="w-px h-6 bg-slate-200"></div>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={logout}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
+                  >
+                    <LogOut size={16} />
+                    <span className="hidden sm:inline">Keluar</span>
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -511,29 +512,32 @@ export default function App() {
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
 
                 {/* Bagian atas: Profil Ibu & Posyandu */}
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-full bg-sky-100 border-2 border-white shadow flex items-center justify-center text-sky-700 font-extrabold text-lg shrink-0">
-                    {familyProfile.motherName ? familyProfile.motherName.charAt(0).toUpperCase() : <Heart className="w-6 h-6" />}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 shadow-sm flex items-center justify-center text-white font-extrabold text-xl shrink-0">
+                    {(user?.name || user?.username || 'O').charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {familyProfile.motherName ? (
-                      <>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Ibu dari Si Kecil</p>
-                        <p className="text-slate-800 font-extrabold text-base truncate">{familyProfile.motherName}</p>
-                        <p className="text-xs text-slate-500 mt-0.5 truncate">{familyProfile.posyanduDesa} · Bidan {familyProfile.bidanName}</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Profil Ibu</p>
-                        <p className="text-sm text-slate-400">Belum diisi</p>
-                      </>
-                    )}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-700">
+                        {user?.role === 'ortu' ? 'Orang Tua' : (user?.role || 'Pengguna')}
+                      </span>
+                    </div>
+                    <p className="text-slate-800 font-extrabold text-lg truncate leading-tight">
+                      {user?.name || user?.username || 'Pengguna Aplikasi'}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                      <p className="text-xs text-slate-500 truncate">
+                        {user?.posyandu?.name ? user.posyandu.name : (familyProfile.posyanduDesa ? `Posyandu ${familyProfile.posyanduDesa}` : 'Data posyandu belum diisi')}
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={() => setIsFamilyModalOpen(true)}
-                    className="text-xs font-bold text-sky-600 hover:text-sky-700 transition-colors shrink-0"
+                    className="p-2.5 text-sky-600 hover:bg-sky-50 rounded-xl transition-colors shrink-0"
+                    title="Pengaturan Profil"
                   >
-                    {familyProfile.motherName ? 'Edit' : 'Lengkapi'}
+                    <Settings size={20} />
                   </button>
                 </div>
 
