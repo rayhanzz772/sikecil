@@ -43,19 +43,28 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
         };
       });
 
-    // 3. Map predictions to chart points (only if chartType is height)
-    const predPoints = chartType === 'height' && predictions
+    // 3. Map predictions to chart points
+    const predPoints = predictions
       ? predictions
         .filter((p) => p.age <= maxMonths)
         .map((p) => {
           const whoRef = getInterpolatedRecord(p.age, gender, chartType);
+          
+          let pValue: number | undefined;
+          if (chartType === 'height') pValue = p.height?.value;
+          else if (chartType === 'weight') pValue = p.weight?.value;
+          else if (chartType === 'head') pValue = p.head_circ?.value;
+          
+          if (pValue === undefined) return null;
+
           return {
             ...whoRef,
-            predictionValue: p.height,
+            predictionValue: pValue,
             isPredictionPoint: true,
             dateLabel: `Prediksi Usia ${p.age} Bln`
           };
         })
+        .filter(item => item !== null)
       : [];
 
     // Connect actual line and prediction line so they start exactly from the last measurement
@@ -285,7 +294,7 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
           />
 
           {/* AI Prediction Line */}
-          {chartType === 'height' && predictions && predictions.length > 0 && (
+          {predictions && predictions.length > 0 && (
             <Line
               type="linear"
               dataKey="predictionValue"
@@ -293,7 +302,7 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
               strokeWidth={3.5}
               dot={{ r: 5, fill: '#a855f7', stroke: '#ffffff', strokeWidth: 2 }}
               activeDot={{ r: 7, fill: '#7e22ce' }}
-              name="Prediksi AI (Tinggi)"
+              name={`Prediksi AI (${chartType === 'height' ? 'Tinggi' : chartType === 'weight' ? 'Berat' : 'L. Kepala'})`}
               connectNulls={true}
             />
           )}

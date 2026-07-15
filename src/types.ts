@@ -37,11 +37,20 @@ export interface WHORecords {
 export type GrowthStatus = 'Sangat Pendek' | 'Pendek' | 'Normal' | 'Tinggi';
 export type WeightStatus = 'Sangat Kurang' | 'Kurang' | 'Normal' | 'Risiko Berat Badan Lebih';
 
+export interface PredictionIndicator {
+  value: number;
+  status: string;
+  uncertainty_band?: number;
+  haz?: number;
+  waz?: number;
+  hcaz?: number;
+}
+
 export interface PredictionPoint {
   age: number;
-  haz: number;
-  height: number;
-  status: string;
+  height: PredictionIndicator;
+  weight?: PredictionIndicator;
+  head_circ?: PredictionIndicator;
 }
 
 export interface ModelMetrics {
