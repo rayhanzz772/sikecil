@@ -64,9 +64,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(6), // birth
     ageMonths: 0,
-    height: 49.8,
-    weight: 3.3,
-    headCircumference: 34.5,
+    height: 50.2,
+    weight: 3.4,
+    headCircumference: 34.8,
     notes: 'Kondisi lahir sehat dan normal'
   },
   {
@@ -74,9 +74,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(5), // 1 month
     ageMonths: 1,
-    height: 54.5,
-    weight: 4.4,
-    headCircumference: 37.1,
+    height: 54.1,
+    weight: 4.2,
+    headCircumference: 37.0,
     notes: 'Imunisasi BCG & Polio 1'
   },
   {
@@ -84,9 +84,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(4), // 2 months
     ageMonths: 2,
-    height: 58.4,
-    weight: 5.6,
-    headCircumference: 39.1,
+    height: 57.8,
+    weight: 5.1,
+    headCircumference: 38.8,
     notes: 'Imunisasi DPT-HB-Hib 1 & Polio 2'
   },
   {
@@ -94,9 +94,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(3), // 3 months
     ageMonths: 3,
-    height: 61.5,
-    weight: 6.3,
-    headCircumference: 40.6,
+    height: 60.5,
+    weight: 5.8,
+    headCircumference: 40.2,
     notes: 'Tumbuh kembang aktif'
   },
   {
@@ -104,9 +104,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(2), // 4 months
     ageMonths: 4,
-    height: 63.9,
-    weight: 7.0,
-    headCircumference: 41.6,
+    height: 62.8,
+    weight: 6.6,
+    headCircumference: 41.1,
     notes: 'Mulai tengkurap mandiri'
   },
   {
@@ -114,9 +114,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(1), // 5 months
     ageMonths: 5,
-    height: 66.0,
-    weight: 7.5,
-    headCircumference: 42.5,
+    height: 64.5,
+    weight: 7.1,
+    headCircumference: 42.0,
     notes: 'Persiapan MPASI'
   },
   {
@@ -124,9 +124,9 @@ const DEFAULT_MEASUREMENTS: Measurement[] = [
     childId: 'child-1',
     date: getCurrentDateMinusMonths(0), // 6 months (today)
     ageMonths: 6,
-    height: 67.6,
-    weight: 7.9,
-    headCircumference: 43.3,
+    height: 66.0,
+    weight: 7.4,
+    headCircumference: 42.7,
     notes: 'Mulai makan MPASI pertama'
   }
 ];
@@ -154,7 +154,7 @@ export default function App() {
 
   // UI state
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
-  const [maxMonthsFilter, setMaxMonthsFilter] = useState<number>(12); // 12, 24, or 60
+  const [timeRange, setTimeRange] = useState<string>('0-6m'); // 0-6m, 0-24m, 6-24m, 24-60m, 0-60m
   const [isChildModalOpen, setIsChildModalOpen] = useState(false);
   const [isMeasureModalOpen, setIsMeasureModalOpen] = useState(false);
   const [editingChild, setEditingChild] = useState<Child | null>(null);
@@ -199,6 +199,37 @@ export default function App() {
     useState(false);
   // Derived state
   const currentChild = children.find(c => c.id === selectedChildId) || children[0] || null;
+
+  const isGirl = currentChild?.gender === 'Perempuan';
+  const theme = isGirl ? {
+    bgLight: 'bg-pink-50',
+    bgLight80: 'bg-pink-50/80',
+    text: 'text-pink-600',
+    textDark: 'text-pink-700',
+    bg: 'bg-pink-600',
+    bgHover: 'hover:bg-pink-700',
+    border: 'border-pink-200',
+    borderLight: 'border-pink-100',
+    ring: 'ring-pink-500',
+    ring10: 'ring-pink-500/10',
+    shadow: 'shadow-pink-600/20',
+    gradient: 'from-pink-600 to-rose-700',
+    shadowColor: 'shadow-pink-600/10'
+  } : {
+    bgLight: 'bg-sky-50',
+    bgLight80: 'bg-sky-50/80',
+    text: 'text-sky-600',
+    textDark: 'text-sky-700',
+    bg: 'bg-sky-600',
+    bgHover: 'hover:bg-sky-700',
+    border: 'border-sky-200',
+    borderLight: 'border-sky-100',
+    ring: 'ring-sky-500',
+    ring10: 'ring-sky-500/10',
+    shadow: 'shadow-sky-600/20',
+    gradient: 'from-sky-600 to-indigo-700',
+    shadowColor: 'shadow-sky-600/10'
+  };
 
   const currentMeasurements = currentChild
     ? measurements.filter(m => m.childId === currentChild.id).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -585,14 +616,14 @@ export default function App() {
                   <div
                     onClick={() => setActiveChartTab('height')}
                     className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'height'
-                      ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10'
+                      ? `${theme.bgLight80} ${theme.border} ring-2 ${theme.ring10}`
                       : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                       }`}
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <Ruler className={`w-4 h-4 ${activeChartTab === 'height' ? 'text-sky-600' : 'text-slate-400'}`} />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Tinggi</span>
-                      <span className="text-sm font-extrabold text-slate-800 block leading-tight">
+                      <Ruler className={`w-4 h-4 ${activeChartTab === 'height' ? theme.text : 'text-slate-400'}`} />
+                      <span className={`text-[9px] font-bold uppercase tracking-wider block ${activeChartTab === 'height' ? theme.text : 'text-slate-400'}`}>Tinggi</span>
+                      <span className={`text-sm font-extrabold block leading-tight ${activeChartTab === 'height' ? theme.textDark : 'text-slate-800'}`}>
                         {latestMeasurement ? `${latestMeasurement.height} cm` : '--'}
                       </span>
                       {stuntingAnalysis && (
@@ -609,14 +640,14 @@ export default function App() {
                   <div
                     onClick={() => setActiveChartTab('weight')}
                     className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'weight'
-                      ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10'
+                      ? `${theme.bgLight80} ${theme.border} ring-2 ${theme.ring10}`
                       : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                       }`}
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <Scale className={`w-4 h-4 ${activeChartTab === 'weight' ? 'text-sky-600' : 'text-slate-400'}`} />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Berat</span>
-                      <span className="text-sm font-extrabold text-slate-800 block leading-tight">
+                      <Scale className={`w-4 h-4 ${activeChartTab === 'weight' ? theme.text : 'text-slate-400'}`} />
+                      <span className={`text-[9px] font-bold uppercase tracking-wider block ${activeChartTab === 'weight' ? theme.text : 'text-slate-400'}`}>Berat</span>
+                      <span className={`text-sm font-extrabold block leading-tight ${activeChartTab === 'weight' ? theme.textDark : 'text-slate-800'}`}>
                         {latestMeasurement ? `${latestMeasurement.weight} kg` : '--'}
                       </span>
                       {weightAnalysis && (
@@ -633,14 +664,14 @@ export default function App() {
                   <div
                     onClick={() => setActiveChartTab('head')}
                     className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'head'
-                      ? 'bg-sky-50/80 border-sky-200 ring-2 ring-sky-500/10'
+                      ? `${theme.bgLight80} ${theme.border} ring-2 ${theme.ring10}`
                       : 'bg-slate-50 border-slate-200 hover:border-slate-300'
                       }`}
                   >
                     <div className="flex flex-col items-center gap-1">
-                      <Heart className={`w-4 h-4 ${activeChartTab === 'head' ? 'text-pink-600' : 'text-slate-400'}`} />
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">L. Kepala</span>
-                      <span className="text-sm font-extrabold text-slate-800 block leading-tight">
+                      <Heart className={`w-4 h-4 ${activeChartTab === 'head' ? theme.text : 'text-slate-400'}`} />
+                      <span className={`text-[9px] font-bold uppercase tracking-wider block ${activeChartTab === 'head' ? theme.text : 'text-slate-400'}`}>L. Kepala</span>
+                      <span className={`text-sm font-extrabold block leading-tight ${activeChartTab === 'head' ? theme.textDark : 'text-slate-800'}`}>
                         {latestMeasurement?.headCircumference ? `${latestMeasurement.headCircumference} cm` : '--'}
                       </span>
                       {headAnalysis && (
@@ -671,7 +702,7 @@ export default function App() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <h3 className="font-extrabold text-slate-800 flex items-center gap-1.5 font-display text-base">
-                          <TrendingUp className="w-5 h-5 text-sky-600" />
+                          <TrendingUp className={`w-5 h-5 ${theme.text}`} />
                           Grafik Standar WHO
                         </h3>
                         <p className="text-xs text-slate-500 mt-0.5">Memantau tumbuh kembang anak secara mandiri</p>
@@ -680,13 +711,15 @@ export default function App() {
                       {/* Select range dropdown */}
                       <div className="flex gap-2">
                         <select
-                          value={maxMonthsFilter}
-                          onChange={(e) => setMaxMonthsFilter(Number(e.target.value))}
-                          className="bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer uppercase tracking-wider"
+                          value={timeRange}
+                          onChange={(e) => setTimeRange(e.target.value)}
+                          className={`bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 focus:${theme.ring} cursor-pointer uppercase tracking-wider`}
                         >
-                          <option value={12}>0 - 12 Bulan</option>
-                          <option value={24}>0 - 24 Bulan</option>
-                          <option value={60}>0 - 60 Bulan</option>
+                          <option value="0-6m">0 - 6 Bulan (Mingguan)</option>
+                          <option value="0-24m">0 - 2 Tahun</option>
+                          <option value="6-24m">6 Bulan - 2 Tahun</option>
+                          <option value="24-60m">2 - 5 Tahun</option>
+                          <option value="0-60m">0 - 5 Tahun</option>
                         </select>
                       </div>
                     </div>
@@ -696,7 +729,7 @@ export default function App() {
                       <button
                         onClick={() => setActiveChartTab('height')}
                         className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${activeChartTab === 'height'
-                          ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
+                          ? `bg-white ${theme.textDark} shadow-sm border-b border-slate-200/50`
                           : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
@@ -705,7 +738,7 @@ export default function App() {
                       <button
                         onClick={() => setActiveChartTab('weight')}
                         className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${activeChartTab === 'weight'
-                          ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
+                          ? `bg-white ${theme.textDark} shadow-sm border-b border-slate-200/50`
                           : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
@@ -714,7 +747,7 @@ export default function App() {
                       <button
                         onClick={() => setActiveChartTab('head')}
                         className={`py-2 text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer text-center ${activeChartTab === 'head'
-                          ? 'bg-white text-sky-700 shadow-sm border-b border-slate-200/50'
+                          ? `bg-white ${theme.textDark} shadow-sm border-b border-slate-200/50`
                           : 'text-slate-500 hover:text-slate-800'
                           }`}
                       >
@@ -727,7 +760,7 @@ export default function App() {
                       <GrowthChart
                         gender={currentChild.gender}
                         measurements={currentMeasurements}
-                        maxMonths={maxMonthsFilter}
+                        timeRange={timeRange}
                         chartType={activeChartTab}
                         predictions={predictions?.prediction}
                       />

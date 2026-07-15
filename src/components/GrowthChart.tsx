@@ -17,21 +17,30 @@ import { generateWHOChartData, getInterpolatedRecord } from '../utils/whoStandar
 interface GrowthChartProps {
   gender: Gender;
   measurements: Measurement[];
-  maxMonths: number; // 12, 24, or 60
+  timeRange: string;
   chartType: 'height' | 'weight' | 'head';
   predictions?: PredictionPoint[];
 }
 
-export default function GrowthChart({ gender, measurements, maxMonths, chartType, predictions }: GrowthChartProps) {
+export default function GrowthChart({ gender, measurements, timeRange, chartType, predictions }: GrowthChartProps) {
+
+  const { startMonth, endMonth } = useMemo(() => {
+    if (timeRange === '0-6m') return { startMonth: 0, endMonth: 6 };
+    if (timeRange === '6-24m') return { startMonth: 6, endMonth: 24 };
+    if (timeRange === '24-60m') return { startMonth: 24, endMonth: 60 };
+    if (timeRange === '0-60m') return { startMonth: 0, endMonth: 60 };
+    return { startMonth: 0, endMonth: 24 }; // default 0-24m
+  }, [timeRange]);
+
   const chartData = useMemo(() => {
     // 1. Generate base monthly WHO data
-    const whoBase = generateWHOChartData(gender, maxMonths, chartType);
+    const whoBase = generateWHOChartData(gender, timeRange, chartType);
 
     // 2. Map child measurements to chart points
     // To make a continuous line, we can insert the child's exact decimal month measurements 
     // and compute the WHO reference values for those exact ages.
     const childPoints = measurements
-      .filter((m) => m.ageMonths <= maxMonths && (chartType !== 'head' || m.headCircumference !== undefined))
+      .filter((m) => m.ageMonths >= startMonth && m.ageMonths <= endMonth && (chartType !== 'head' || m.headCircumference !== undefined))
       .map((m) => {
         const whoRef = getInterpolatedRecord(m.ageMonths, gender, chartType);
         return {
@@ -46,15 +55,15 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
     // 3. Map predictions to chart points
     const predPoints = predictions
       ? predictions
-        .filter((p) => p.age <= maxMonths)
+        .filter((p) => p.age >= startMonth && p.age <= endMonth)
         .map((p) => {
           const whoRef = getInterpolatedRecord(p.age, gender, chartType);
-          
+
           let pValue: number | undefined;
           if (chartType === 'height') pValue = p.height?.value;
           else if (chartType === 'weight') pValue = p.weight?.value;
           else if (chartType === 'head') pValue = p.head_circ?.value;
-          
+
           if (pValue === undefined) return null;
 
           return {
@@ -76,9 +85,9 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
 
     // 4. Combine both and sort by month
     const combinedMap = new Map<number, any>();
-    
+
     whoBase.forEach(wb => combinedMap.set(wb.month, { ...wb }));
-    
+
     childPoints.forEach(cp => {
       if (combinedMap.has(cp.month)) {
         Object.assign(combinedMap.get(cp.month), cp);
@@ -99,10 +108,23 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
     combined.sort((a, b) => a.month - b.month);
 
     return combined;
-  }, [gender, measurements, maxMonths, chartType, predictions]);
+  }, [gender, measurements, timeRange, startMonth, endMonth, chartType, predictions]);
 
   const unit = chartType === 'height' ? 'cm' : chartType === 'weight' ? 'kg' : 'cm';
   const labelText = chartType === 'height' ? 'Tinggi Badan (cm)' : chartType === 'weight' ? 'Berat Badan (kg)' : 'Lingkar Kepala (cm)';
+
+  const childLineColor = gender === 'Perempuan' ? '#ec4899' : '#0284c7';
+  const childActiveDotColor = gender === 'Perempuan' ? '#be185d' : '#0369a1';
+
+  const xTicks = useMemo(() => {
+    if (timeRange === '0-6m') {
+      const t = [];
+      for (let w = 0; w <= 13; w++) t.push((w * 7) / 30.4375);
+      t.push(4, 5, 6);
+      return t;
+    }
+    return undefined; // auto
+  }, [timeRange]);
 
   // Find min/max for YAxis scaling to keep the chart tight and readable
   const yDomain = useMemo(() => {
@@ -177,14 +199,16 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
           data={chartData}
           margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#f1f5f9" />
+          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#d8dde3ff" />
           <XAxis
             dataKey="month"
             type="number"
-            domain={[0, maxMonths]}
-            tickCount={maxMonths <= 12 ? 13 : maxMonths === 24 ? 9 : 11}
-            tick={{ fill: '#64748b', fontSize: 11 }}
-            label={{ value: 'Usia (bulan)', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 11 }}
+            domain={[startMonth, endMonth]}
+            ticks={xTicks}
+            tickCount={timeRange === '0-6m' ? undefined : (endMonth - startMonth <= 12 ? 13 : endMonth - startMonth === 24 ? 9 : 11)}
+            tick={{ fill: '#64748b', fontSize: 10 }}
+            tickFormatter={(val) => timeRange === '0-6m' && val <= 3.0 ? `W${Math.round((val * 30.4375) / 7)}` : Math.round(val).toString()}
+            label={{ value: 'Usia', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 11 }}
           />
           <YAxis
             domain={yDomain}
@@ -285,10 +309,10 @@ export default function GrowthChart({ gender, measurements, maxMonths, chartType
           <Line
             type="linear"
             dataKey="childValue"
-            stroke="#0284c7"
+            stroke={childLineColor}
             strokeWidth={3.5}
-            dot={{ r: 5, fill: '#0284c7', stroke: '#ffffff', strokeWidth: 2 }}
-            activeDot={{ r: 7, fill: '#0369a1' }}
+            dot={{ r: 5, fill: childLineColor, stroke: '#ffffff', strokeWidth: 2 }}
+            activeDot={{ r: 7, fill: childActiveDotColor }}
             name="Pertumbuhan Si Kecil"
             connectNulls={true}
           />

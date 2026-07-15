@@ -434,12 +434,33 @@ export function getInterpolatedRecord(month: number, gender: Gender, type: 'heig
 }
 
 // Generate complete array of data points for plotting WHO bands in charts
-export function generateWHOChartData(gender: Gender, maxMonths: number = 24, type: 'height' | 'weight' | 'head'): WHORecord[] {
+export function generateWHOChartData(gender: Gender, timeRange: string = '0-24m', type: 'height' | 'weight' | 'head'): WHORecord[] {
   const data: WHORecord[] = [];
-  // We can push points at every month for smooth plotting
-  for (let m = 0; m <= maxMonths; m++) {
-    data.push(getInterpolatedRecord(m, gender, type));
+
+  if (timeRange === '0-6m') {
+    // Generate weekly points (Weeks 0 to 13)
+    for (let w = 0; w <= 13; w++) {
+      const monthEquivalent = (w * 7) / 30.4375;
+      data.push(getInterpolatedRecord(monthEquivalent, gender, type));
+    }
+    // Then add standard months 4, 5, 6
+    for (let m = 4; m <= 6; m++) {
+      data.push(getInterpolatedRecord(m, gender, type));
+    }
+  } else {
+    let startMonth = 0;
+    let endMonth = 24;
+    
+    if (timeRange === '6-24m') { startMonth = 6; endMonth = 24; }
+    else if (timeRange === '24-60m') { startMonth = 24; endMonth = 60; }
+    else if (timeRange === '0-60m') { startMonth = 0; endMonth = 60; }
+    else if (timeRange === '0-24m') { startMonth = 0; endMonth = 24; }
+
+    for (let m = startMonth; m <= endMonth; m++) {
+      data.push(getInterpolatedRecord(m, gender, type));
+    }
   }
+
   return data;
 }
 
