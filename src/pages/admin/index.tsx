@@ -899,8 +899,8 @@ export const AdminChildrenData: React.FC = () => {
                   <td className="p-4 text-slate-600">
                     {child.birth_date ? new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
                   </td>
-                  <td className="p-4 text-slate-600 text-sm font-bold text-sky-700">{child.posyandu?.name || '-'}</td>
-                  <td className="p-4 text-slate-600 text-sm">{child.parent_name || '-'}</td>
+                  <td className="p-4 text-slate-600 text-sm font-bold text-sky-700">{child.user?.posyandu?.name || '-'}</td>
+                  <td className="p-4 text-slate-600 text-sm">{child.user.name || '-'}</td>
                 </tr>
               ))}
             </tbody>

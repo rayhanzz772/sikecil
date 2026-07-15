@@ -5,6 +5,7 @@ export interface Child {
   name: string;
   birthDate: string; // ISO String or YYYY-MM-DD
   gender: Gender;
+  nik?: string;
 }
 
 export interface Measurement {
@@ -16,6 +17,12 @@ export interface Measurement {
   weight: number; // kg
   headCircumference?: number; // cm, optional
   notes?: string;
+  haz?: number;
+  waz?: number;
+  hcaz?: number;
+  status_haz?: string;
+  status_waz?: string;
+  status_hcaz?: string;
 }
 
 export interface WHORecord {

@@ -510,86 +510,94 @@ export function formatAgeText(birthDateStr: string, targetDateStr: string = new 
 }
 
 // Determine Stunting Status (HAZ - Height for Age Z-Score)
-export function getStuntingStatus(height: number, ageMonths: number, gender: Gender): { status: GrowthStatus; colorClass: string; textClass: string; zScore: number } {
-  const ref = getInterpolatedRecord(ageMonths, gender, 'height');
-
-  // Calculate Z-Score
-  // Z = (value - median) / SD
-  let zScore = 0;
-  if (height < ref.median) {
-    // If lower than median, SD is calculated from median to -1 SD
-    const sdLower = ref.median - ref.sd1neg;
-    zScore = (height - ref.median) / sdLower;
-  } else {
-    // If higher than median, SD is calculated from median to +1 SD
-    const sdUpper = ref.sd1pos - ref.median;
-    zScore = (height - ref.median) / sdUpper;
+export function getStuntingStatus(height: number, ageMonths: number, gender: Gender, providedZScore?: number, providedStatus?: string): { status: string; colorClass: string; textClass: string; zScore: number } {
+  let zScore = providedZScore;
+  if (zScore === undefined || zScore === null) {
+    const ref = getInterpolatedRecord(ageMonths, gender, 'height');
+    if (height < ref.median) {
+      const sdLower = ref.median - ref.sd1neg;
+      zScore = (height - ref.median) / sdLower;
+    } else {
+      const sdUpper = ref.sd1pos - ref.median;
+      zScore = (height - ref.median) / sdUpper;
+    }
   }
 
   zScore = Number(zScore.toFixed(2));
 
+  let colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  let textClass = 'text-emerald-600';
+  let defaultStatus = 'Normal';
+
   if (zScore < -3) {
-    return { status: 'Sangat Pendek', colorClass: 'bg-red-50 text-red-700 border-red-200', textClass: 'text-red-600', zScore };
+    defaultStatus = 'Sangat Pendek'; colorClass = 'bg-red-50 text-red-700 border-red-200'; textClass = 'text-red-600';
+  } else if (zScore < -2) {
+    defaultStatus = 'Pendek'; colorClass = 'bg-amber-50 text-amber-700 border-amber-200'; textClass = 'text-amber-600';
+  } else if (zScore > 3) {
+    defaultStatus = 'Tinggi'; colorClass = 'bg-blue-50 text-blue-700 border-blue-200'; textClass = 'text-blue-600';
   }
-  if (zScore < -2) {
-    return { status: 'Pendek', colorClass: 'bg-amber-50 text-amber-700 border-amber-200', textClass: 'text-amber-600', zScore };
-  }
-  if (zScore <= 3) {
-    return { status: 'Normal', colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', textClass: 'text-emerald-600', zScore };
-  }
-  return { status: 'Tinggi', colorClass: 'bg-blue-50 text-blue-700 border-blue-200', textClass: 'text-blue-600', zScore };
+
+  return { status: providedStatus || defaultStatus, colorClass, textClass, zScore };
 }
 
 // Determine Weight Status (WAZ - Weight for Age Z-Score)
-export function getWeightStatus(weight: number, ageMonths: number, gender: Gender): { status: WeightStatus; colorClass: string; textClass: string; zScore: number } {
-  const ref = getInterpolatedRecord(ageMonths, gender, 'weight');
-
-  let zScore = 0;
-  if (weight < ref.median) {
-    const sdLower = ref.median - ref.sd1neg;
-    zScore = (weight - ref.median) / sdLower;
-  } else {
-    const sdUpper = ref.sd1pos - ref.median;
-    zScore = (weight - ref.median) / sdUpper;
+export function getWeightStatus(weight: number, ageMonths: number, gender: Gender, providedZScore?: number, providedStatus?: string): { status: string; colorClass: string; textClass: string; zScore: number } {
+  let zScore = providedZScore;
+  if (zScore === undefined || zScore === null) {
+    const ref = getInterpolatedRecord(ageMonths, gender, 'weight');
+    if (weight < ref.median) {
+      const sdLower = ref.median - ref.sd1neg;
+      zScore = (weight - ref.median) / sdLower;
+    } else {
+      const sdUpper = ref.sd1pos - ref.median;
+      zScore = (weight - ref.median) / sdUpper;
+    }
   }
 
   zScore = Number(zScore.toFixed(2));
 
+  let colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  let textClass = 'text-emerald-600';
+  let defaultStatus = 'Normal';
+
   if (zScore < -3) {
-    return { status: 'Sangat Kurang', colorClass: 'bg-red-50 text-red-700 border-red-200', textClass: 'text-red-600', zScore };
+    defaultStatus = 'Sangat Kurang'; colorClass = 'bg-red-50 text-red-700 border-red-200'; textClass = 'text-red-600';
+  } else if (zScore < -2) {
+    defaultStatus = 'Kurang'; colorClass = 'bg-amber-50 text-amber-700 border-amber-200'; textClass = 'text-amber-600';
+  } else if (zScore > 2) {
+    defaultStatus = 'Risiko Berat Badan Lebih'; colorClass = 'bg-blue-50 text-blue-700 border-blue-200'; textClass = 'text-blue-600';
   }
-  if (zScore < -2) {
-    return { status: 'Kurang', colorClass: 'bg-amber-50 text-amber-700 border-amber-200', textClass: 'text-amber-600', zScore };
-  }
-  if (zScore <= 2) {
-    return { status: 'Normal', colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', textClass: 'text-emerald-600', zScore };
-  }
-  return { status: 'Risiko Berat Badan Lebih', colorClass: 'bg-blue-50 text-blue-700 border-blue-200', textClass: 'text-blue-600', zScore };
+
+  return { status: providedStatus || defaultStatus, colorClass, textClass, zScore };
 }
 
 // Determine Head Circumference Status (HCFA - Head Circumference for Age Z-Score)
-export function getHeadCircumferenceStatus(headCirc: number, ageMonths: number, gender: Gender): { status: 'Sangat Kecil' | 'Kecil' | 'Normal' | 'Sangat Besar'; colorClass: string; textClass: string; zScore: number } {
-  const ref = getInterpolatedRecord(ageMonths, gender, 'head');
-
-  let zScore = 0;
-  if (headCirc < ref.median) {
-    const sdLower = ref.median - ref.sd1neg;
-    zScore = (headCirc - ref.median) / sdLower;
-  } else {
-    const sdUpper = ref.sd1pos - ref.median;
-    zScore = (headCirc - ref.median) / sdUpper;
+export function getHeadCircumferenceStatus(headCirc: number, ageMonths: number, gender: Gender, providedZScore?: number, providedStatus?: string): { status: string; colorClass: string; textClass: string; zScore: number } {
+  let zScore = providedZScore;
+  if (zScore === undefined || zScore === null) {
+    const ref = getInterpolatedRecord(ageMonths, gender, 'head');
+    if (headCirc < ref.median) {
+      const sdLower = ref.median - ref.sd1neg;
+      zScore = (headCirc - ref.median) / sdLower;
+    } else {
+      const sdUpper = ref.sd1pos - ref.median;
+      zScore = (headCirc - ref.median) / sdUpper;
+    }
   }
 
   zScore = Number(zScore.toFixed(2));
 
+  let colorClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+  let textClass = 'text-emerald-600';
+  let defaultStatus = 'Normal';
+
   if (zScore < -3) {
-    return { status: 'Sangat Kecil', colorClass: 'bg-red-50 text-red-700 border-red-200', textClass: 'text-red-600', zScore };
+    defaultStatus = 'Sangat Kecil'; colorClass = 'bg-red-50 text-red-700 border-red-200'; textClass = 'text-red-600';
+  } else if (zScore < -2) {
+    defaultStatus = 'Kecil'; colorClass = 'bg-amber-50 text-amber-700 border-amber-200'; textClass = 'text-amber-600';
+  } else if (zScore > 2) {
+    defaultStatus = 'Sangat Besar'; colorClass = 'bg-blue-50 text-blue-700 border-blue-200'; textClass = 'text-blue-600';
   }
-  if (zScore < -2) {
-    return { status: 'Kecil', colorClass: 'bg-amber-50 text-amber-700 border-amber-200', textClass: 'text-amber-600', zScore };
-  }
-  if (zScore <= 2) {
-    return { status: 'Normal', colorClass: 'bg-emerald-50 text-emerald-700 border-emerald-200', textClass: 'text-emerald-600', zScore };
-  }
-  return { status: 'Sangat Besar', colorClass: 'bg-blue-50 text-blue-700 border-blue-200', textClass: 'text-blue-600', zScore };
+
+  return { status: providedStatus || defaultStatus, colorClass, textClass, zScore };
 }

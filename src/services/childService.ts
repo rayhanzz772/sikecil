@@ -6,10 +6,9 @@ export interface ChildDTO {
   name: string;
   nik: string;
   birth_date: string;
-  gender: 'Laki-laki' | 'Perempuan';
-  parent_name?: string;
-  parent_nik?: string;
-  posyandu_id?: string;
+  gender: 'L' | 'P';
+  user_id: string;
+  address?: string;
 }
 
 export const childService = {
@@ -20,6 +19,11 @@ export const childService = {
 
   getById: async (id: string) => {
     const response = await api.get(`/children/${id}`);
+    return response.data;
+  },
+
+  getParents: async (search?: string) => {
+    const response = await api.get('/children/parents', { params: { q: search } });
     return response.data;
   },
 
@@ -35,6 +39,11 @@ export const childService = {
 
   delete: async (id: string) => {
     const response = await api.delete(`/children/${id}`);
+    return response.data;
+  },
+
+  getMyChildren: async (page?: number, per_page?: number) => {
+    const response = await api.get('/children/my', { params: { page, per_page } });
     return response.data;
   }
 };

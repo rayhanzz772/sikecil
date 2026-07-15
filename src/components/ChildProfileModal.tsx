@@ -11,6 +11,7 @@ interface ChildProfileModalProps {
 
 export default function ChildProfileModal({ isOpen, onClose, onSave, initialChild }: ChildProfileModalProps) {
   const [name, setName] = useState('');
+  const [nik, setNik] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState<Gender>('Laki-laki');
   const [error, setError] = useState('');
@@ -18,10 +19,12 @@ export default function ChildProfileModal({ isOpen, onClose, onSave, initialChil
   useEffect(() => {
     if (initialChild) {
       setName(initialChild.name);
+      setNik(initialChild.nik || '');
       setBirthDate(initialChild.birthDate);
       setGender(initialChild.gender);
     } else {
       setName('');
+      setNik('');
       // Default to today or a sensible past date
       setBirthDate(new Date().toISOString().split('T')[0]);
       setGender('Laki-laki');
@@ -35,6 +38,10 @@ export default function ChildProfileModal({ isOpen, onClose, onSave, initialChil
     e.preventDefault();
     if (!name.trim()) {
       setError('Nama anak tidak boleh kosong');
+      return;
+    }
+    if (!nik || nik.length !== 16 || !/^\d+$/.test(nik)) {
+      setError('NIK anak harus 16 digit angka');
       return;
     }
     if (!birthDate) {
@@ -51,6 +58,7 @@ export default function ChildProfileModal({ isOpen, onClose, onSave, initialChil
     onSave({
       id: initialChild?.id,
       name: name.trim(),
+      nik,
       birthDate,
       gender
     });
@@ -93,6 +101,19 @@ export default function ChildProfileModal({ isOpen, onClose, onSave, initialChil
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Jaki / Aisyah"
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-850 font-medium"
+            />
+          </div>
+
+          {/* NIK */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">NIK Anak</label>
+            <input
+              type="text"
+              value={nik}
+              onChange={(e) => setNik(e.target.value)}
+              placeholder="16 Digit NIK Anak"
+              maxLength={16}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all text-slate-850 font-medium"
             />
           </div>

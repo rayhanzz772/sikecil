@@ -31,15 +31,15 @@ export const ChildDetail: React.FC = () => {
       const childData = childRes.data;
       setChild(childData);
       const measurementsRes = await measurementService.getByChildId(childId);
-      
+
       const birthDate = new Date(childData.birth_date);
-      
+
       // Ensure we format it for GrowthChart
       const formattedMeasurements = (measurementsRes.data || []).map((m: any) => {
         const measDate = new Date(m.date);
         const ageDiffMs = measDate.getTime() - birthDate.getTime();
         const calculatedAgeMonths = ageDiffMs / (1000 * 60 * 60 * 24 * 30.44); // approx months
-        
+
         return {
           id: m.id,
           childId: m.child_id,
@@ -47,8 +47,14 @@ export const ChildDetail: React.FC = () => {
           ageMonths: m.age_months !== undefined ? m.age_months : Math.max(0, calculatedAgeMonths),
           height: m.height,
           weight: m.weight,
-          headCircumference: m.head_circumference,
-          notes: m.notes
+          headCircumference: m.head_circ,
+          notes: m.notes,
+          haz: m.haz,
+          waz: m.waz,
+          hcaz: m.hcaz,
+          status_haz: m.status_haz,
+          status_waz: m.status_waz,
+          status_hcaz: m.status_hcaz
         };
       });
       setMeasurements(formattedMeasurements);
@@ -106,14 +112,14 @@ export const ChildDetail: React.FC = () => {
   const sortedMeasurements = [...measurements].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const latestMeasurement = sortedMeasurements.length > 0 ? sortedMeasurements[sortedMeasurements.length - 1] : null;
 
-  const stuntingStatus = latestMeasurement ? getStuntingStatus(latestMeasurement.height, latestMeasurement.ageMonths, child.gender) : null;
-  const weightStatus = latestMeasurement ? getWeightStatus(latestMeasurement.weight, latestMeasurement.ageMonths, child.gender) : null;
+  const stuntingStatus = latestMeasurement ? getStuntingStatus(latestMeasurement.height, latestMeasurement.ageMonths, child.gender, latestMeasurement.haz, latestMeasurement.status_haz) : null;
+  const weightStatus = latestMeasurement ? getWeightStatus(latestMeasurement.weight, latestMeasurement.ageMonths, child.gender, latestMeasurement.waz, latestMeasurement.status_waz) : null;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="p-2 bg-white text-slate-600 rounded-xl border border-slate-200 hover:bg-slate-50 shadow-sm"
         >
@@ -134,7 +140,7 @@ export const ChildDetail: React.FC = () => {
               <p className="text-sm font-semibold text-slate-500">{child.gender}</p>
             </div>
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2 border-b border-slate-100">
               <span className="text-slate-500 text-sm">NIK</span>
@@ -146,11 +152,11 @@ export const ChildDetail: React.FC = () => {
             </div>
             <div className="flex justify-between items-center py-2 border-b border-slate-100">
               <span className="text-slate-500 text-sm">Orang Tua / Wali</span>
-              <span className="font-bold text-slate-700 text-sm">{child.parent_name || '-'}</span>
+              <span className="font-bold text-slate-700 text-sm">{child.user.name || '-'}</span>
             </div>
             <div className="flex justify-between items-center py-2 border-b border-slate-100">
               <span className="text-slate-500 text-sm">Posyandu</span>
-              <span className="font-bold text-slate-700 text-sm">{child.posyandu?.name || '-'}</span>
+              <span className="font-bold text-slate-700 text-sm">{child.user.posyandu.name || '-'}</span>
             </div>
           </div>
 
@@ -163,17 +169,15 @@ export const ChildDetail: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">Tinggi/Panjang</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${
-                    stuntingStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                  }`}>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${stuntingStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    }`}>
                     {stuntingStatus?.status || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">Berat Badan</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${
-                    weightStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                  }`}>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${weightStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    }`}>
                     {weightStatus?.status || 'N/A'}
                   </span>
                 </div>
@@ -190,19 +194,19 @@ export const ChildDetail: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-slate-800">Grafik Pertumbuhan</h2>
               <div className="flex bg-slate-100 p-1 rounded-xl">
-                <button 
+                <button
                   onClick={() => setActiveTab('height')}
                   className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${activeTab === 'height' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                   Tinggi
                 </button>
-                <button 
+                <button
                   onClick={() => setActiveTab('weight')}
                   className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${activeTab === 'weight' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
                 >
                   Berat
                 </button>
-                <button 
+                <button
                   onClick={() => setActiveTab('head')}
                   className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${activeTab === 'head' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
                 >
@@ -210,9 +214,9 @@ export const ChildDetail: React.FC = () => {
                 </button>
               </div>
             </div>
-            
-            <div className="h-80 w-full relative">
-              <GrowthChart 
+
+            <div className="w-full relative">
+              <GrowthChart
                 gender={child.gender}
                 measurements={measurements}
                 timeRange="0-24m"
@@ -224,14 +228,14 @@ export const ChildDetail: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div className="p-6 border-b border-slate-100 flex justify-between items-center">
               <h2 className="text-xl font-bold text-slate-800">Riwayat Pengukuran</h2>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(true)}
                 className="bg-sky-600 text-white px-3 py-1.5 rounded-xl text-sm font-bold hover:bg-sky-700 flex items-center gap-1"
               >
                 <Plus size={16} /> Catat
               </button>
             </div>
-            
+
             <div className="overflow-x-auto">
               {measurements.length === 0 ? (
                 <div className="p-8 text-center text-slate-500">Belum ada data pengukuran.</div>
@@ -271,7 +275,7 @@ export const ChildDetail: React.FC = () => {
           <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-slate-100 sticky top-0 bg-white z-10">
               <h2 className="text-xl font-bold text-slate-800">Catat Pengukuran</h2>
-              <button 
+              <button
                 onClick={() => setIsModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600"
               >

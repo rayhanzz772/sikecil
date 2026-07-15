@@ -12,6 +12,11 @@ export const measurementService = {
     return response.data;
   },
 
+  update: async (childId: string, measurementId: string, data: Partial<Measurement>) => {
+    const response = await api.put(`/children/${childId}/measurements/${measurementId}`, data);
+    return response.data;
+  },
+
   delete: async (childId: string, measurementId: string) => {
     const response = await api.delete(`/children/${childId}/measurements/${measurementId}`);
     return response.data;

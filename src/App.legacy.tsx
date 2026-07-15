@@ -144,19 +144,11 @@ export default function App() {
   const { user, logout } = useAuth();
 
   // LocalStorage state initialization
-  const [children, setChildren] = useState<Child[]>(() => {
-    const saved = localStorage.getItem('sikecil-children');
-    return saved ? JSON.parse(saved) : DEFAULT_CHILDREN;
-  });
+  const [children, setChildren] = useState<Child[]>([]);
 
-  const [measurements, setMeasurements] = useState<Measurement[]>(() => {
-    const saved = localStorage.getItem('sikecil-measurements');
-    return saved ? JSON.parse(saved) : DEFAULT_MEASUREMENTS;
-  });
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
 
-  const [selectedChildId, setSelectedChildId] = useState<string>(() => {
-    return children[0]?.id || '';
-  });
+  const [selectedChildId, setSelectedChildId] = useState<string>('');
 
   // UI state
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
@@ -183,16 +175,78 @@ export default function App() {
       };
   });
   // Sync state to LocalStorage
-  useEffect(() => {
-    localStorage.setItem('sikecil-children', JSON.stringify(children));
-    if (children.length > 0 && !selectedChildId) {
-      setSelectedChildId(children[0].id);
+  const fetchMyChildren = async () => {
+    if (!user) return;
+    try {
+      const { childService } = await import('./services/childService');
+      const response = await childService.getMyChildren();
+      if (response && response.data) {
+        const mappedChildren: Child[] = response.data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          nik: c.nik,
+          birthDate: c.birth_date,
+          gender: c.gender === 'L' ? 'Laki-laki' : 'Perempuan'
+        }));
+        setChildren(mappedChildren);
+        setSelectedChildId((prev) => {
+          if (mappedChildren.length > 0 && (!prev || !mappedChildren.find((c: Child) => c.id === prev))) {
+            return mappedChildren[0].id;
+          }
+          return prev;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch children from backend', err);
     }
-  }, [children, selectedChildId]);
+  };
 
   useEffect(() => {
-    localStorage.setItem('sikecil-measurements', JSON.stringify(measurements));
-  }, [measurements]);
+    fetchMyChildren();
+  }, [user]);
+
+  const fetchMeasurementsForChild = async (childId: string, birthDateStr: string) => {
+    try {
+      const { measurementService } = await import('./services/measurementService');
+      const res = await measurementService.getByChildId(childId);
+      if (res && res.data) {
+        const birthDate = new Date(birthDateStr);
+        const mapped = res.data.map((m: any) => {
+          const measDate = new Date(m.date);
+          const ageDiffMs = measDate.getTime() - birthDate.getTime();
+          const calculatedAgeMonths = ageDiffMs / (1000 * 60 * 60 * 24 * 30.44); // approx months
+          return {
+            id: m.id,
+            childId: m.child_id,
+            date: m.date.split('T')[0],
+            ageMonths: m.age_months !== undefined ? m.age_months : Math.max(0, calculatedAgeMonths),
+            height: m.height,
+            weight: m.weight,
+            headCircumference: m.head_circ,
+            notes: m.notes,
+            haz: m.haz,
+            waz: m.waz,
+            hcaz: m.hcaz,
+            status_haz: m.status_haz,
+            status_waz: m.status_waz,
+            status_hcaz: m.status_hcaz
+          };
+        });
+        setMeasurements(mapped);
+      }
+    } catch (e) {
+      console.error('Failed to fetch measurements', e);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedChildId && children.length > 0) {
+      const child = children.find(c => c.id === selectedChildId) || children[0];
+      if (child) {
+        fetchMeasurementsForChild(child.id, child.birthDate);
+      }
+    }
+  }, [selectedChildId, children]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -247,76 +301,104 @@ export default function App() {
 
   // Calculate stats for current child
   const stuntingAnalysis = currentChild && latestMeasurement
-    ? getStuntingStatus(latestMeasurement.height, latestMeasurement.ageMonths, currentChild.gender)
+    ? getStuntingStatus(latestMeasurement.height, latestMeasurement.ageMonths, currentChild.gender, latestMeasurement.haz, latestMeasurement.status_haz)
     : null;
 
   const weightAnalysis = currentChild && latestMeasurement
-    ? getWeightStatus(latestMeasurement.weight, latestMeasurement.ageMonths, currentChild.gender)
+    ? getWeightStatus(latestMeasurement.weight, latestMeasurement.ageMonths, currentChild.gender, latestMeasurement.waz, latestMeasurement.status_waz)
     : null;
 
-  const headAnalysis = currentChild && latestMeasurement && latestMeasurement.headCircumference
-    ? getHeadCircumferenceStatus(latestMeasurement.headCircumference, latestMeasurement.ageMonths, currentChild.gender)
+  const headAnalysis = currentChild && latestMeasurement && latestMeasurement.headCircumference !== undefined
+    ? getHeadCircumferenceStatus(latestMeasurement.headCircumference, latestMeasurement.ageMonths, currentChild.gender, latestMeasurement.hcaz, latestMeasurement.status_hcaz)
     : null;
 
 
   // Manage child saving
-  const handleSaveChild = (childData: Omit<Child, 'id'> & { id?: string }) => {
-    if (childData.id) {
-      // Edit
-      setChildren(prev => prev.map(c => c.id === childData.id ? { ...c, ...childData } as Child : c));
-      triggerStatus('Profil anak berhasil diubah', 'success');
-    } else {
-      // Create new
-      const newChild: Child = {
-        ...childData,
-        id: `child-${Date.now()}`
+  const handleSaveChild = async (childData: Omit<Child, 'id'> & { id?: string }) => {
+    try {
+      const { childService } = await import('./services/childService');
+      
+      const payload = {
+        name: childData.name,
+        nik: childData.nik || '',
+        birth_date: childData.birthDate,
+        gender: childData.gender === 'Laki-laki' ? 'L' : 'P' as 'L' | 'P',
+        user_id: user?.id || ''
       };
-      setChildren(prev => [...prev, newChild]);
-      setSelectedChildId(newChild.id);
-      triggerStatus('Profil anak berhasil ditambahkan', 'success');
+
+      if (childData.id) {
+        // Edit
+        await childService.update(childData.id, payload);
+        triggerStatus('Profil anak berhasil diubah', 'success');
+      } else {
+        // Create new
+        await childService.create(payload);
+        triggerStatus('Profil anak berhasil ditambahkan', 'success');
+      }
+      
+      await fetchMyChildren();
+    } catch (e: any) {
+      console.error(e);
+      triggerStatus(e?.response?.data?.message || 'Gagal menyimpan data anak', 'error');
     }
   };
 
   // Manage measurement saving
-  const handleSaveMeasurement = (measureData: Omit<Measurement, 'id' | 'ageMonths'> & { id?: string }) => {
+  const handleSaveMeasurement = async (measureData: Omit<Measurement, 'id' | 'ageMonths'> & { id?: string }) => {
     if (!currentChild) return;
 
-    // Calculate age months at measurement date
-    const ageDetails = calculateAge(currentChild.birthDate, measureData.date);
-    const ageMonths = ageDetails.totalMonthsFloat;
-
-    if (measureData.id) {
-      // Edit existing
-      setMeasurements(prev => prev.map(m => m.id === measureData.id ? { ...m, ...measureData, ageMonths } as Measurement : m));
-      triggerStatus('Catatan pertumbuhan berhasil diperbarui', 'success');
-    } else {
-      // Create new
-      const newMeasure: Measurement = {
-        ...measureData,
-        id: `m-${Date.now()}`,
-        ageMonths
+    try {
+      const { measurementService } = await import('./services/measurementService');
+      const payload = {
+        date: measureData.date,
+        height: measureData.height,
+        weight: measureData.weight,
+        head_circ: measureData.headCircumference,
+        notes: measureData.notes
       };
-      setMeasurements(prev => [...prev, newMeasure]);
-      triggerStatus('Catatan pertumbuhan baru berhasil ditambahkan', 'success');
+
+      if (measureData.id) {
+        // Edit existing
+        await measurementService.update(currentChild.id, measureData.id, payload);
+        triggerStatus('Catatan pertumbuhan berhasil diperbarui', 'success');
+      } else {
+        // Create new
+        await measurementService.create(currentChild.id, payload);
+        triggerStatus('Catatan pertumbuhan baru berhasil ditambahkan', 'success');
+      }
+      
+      await fetchMeasurementsForChild(currentChild.id, currentChild.birthDate);
+    } catch (e: any) {
+      console.error(e);
+      triggerStatus(e?.response?.data?.message || 'Gagal menyimpan catatan', 'error');
     }
   };
 
   // Manage deletion
-  const handleDeleteChild = (id: string) => {
+  const handleDeleteChild = async (id: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus profil anak ini beserta semua catatan pertumbuhannya?')) {
-      setChildren(prev => prev.filter(c => c.id !== id));
-      setMeasurements(prev => prev.filter(m => m.childId !== id));
-      if (selectedChildId === id) {
-        setSelectedChildId('');
+      try {
+        const { childService } = await import('./services/childService');
+        await childService.delete(id);
+        triggerStatus('Profil anak berhasil dihapus', 'success');
+        await fetchMyChildren();
+      } catch (e: any) {
+        triggerStatus('Gagal menghapus anak', 'error');
       }
-      triggerStatus('Profil anak berhasil dihapus', 'success');
     }
   };
 
-  const handleDeleteMeasurement = (id: string) => {
+  const handleDeleteMeasurement = async (id: string) => {
+    if (!currentChild) return;
     if (window.confirm('Hapus catatan pertumbuhan ini?')) {
-      setMeasurements(prev => prev.filter(m => m.id !== id));
-      triggerStatus('Catatan pertumbuhan dihapus', 'success');
+      try {
+        const { measurementService } = await import('./services/measurementService');
+        await measurementService.delete(currentChild.id, id);
+        triggerStatus('Catatan pertumbuhan dihapus', 'success');
+        await fetchMeasurementsForChild(currentChild.id, currentChild.birthDate);
+      } catch (e: any) {
+        triggerStatus('Gagal menghapus catatan', 'error');
+      }
     }
   };
 

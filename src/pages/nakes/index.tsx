@@ -32,10 +32,28 @@ export const NakesChildrenData: React.FC = () => {
     name: '',
     nik: '',
     birth_date: '',
-    gender: 'Laki-laki',
-    parent_name: '',
-    parent_nik: ''
+    gender: 'L',
+    user_id: '',
+    address: ''
   });
+
+  const [parents, setParents] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      fetchParents('');
+    }
+  }, [isModalOpen]);
+
+  const fetchParents = async (searchQuery: string) => {
+    try {
+      const { childService } = await import('../../services/childService');
+      const response = await childService.getParents(searchQuery);
+      setParents(response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch parents:', error);
+    }
+  };
 
   const fetchChildren = async () => {
     setIsLoading(true);
@@ -71,9 +89,9 @@ export const NakesChildrenData: React.FC = () => {
         name: '',
         nik: '',
         birth_date: '',
-        gender: 'Laki-laki',
-        parent_name: '',
-        parent_nik: ''
+        gender: 'L',
+        user_id: '',
+        address: ''
       });
       fetchChildren();
     } catch (error) {
@@ -130,14 +148,14 @@ export const NakesChildrenData: React.FC = () => {
                   <td className="p-4 text-slate-700 font-mono text-sm">{child.nik || '-'}</td>
                   <td className="p-4 text-slate-800 font-bold">{child.name}</td>
                   <td className="p-4 text-slate-600">
-                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${child.gender === 'Laki-laki' ? 'bg-sky-100 text-sky-700' : 'bg-pink-100 text-pink-700'}`}>
-                      {child.gender}
+                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${child.gender === 'L' || child.gender === 'Laki-laki' ? 'bg-sky-100 text-sky-700' : 'bg-pink-100 text-pink-700'}`}>
+                      {child.gender === 'L' || child.gender === 'Laki-laki' ? 'Laki-laki' : 'Perempuan'}
                     </span>
                   </td>
                   <td className="p-4 text-slate-600">
                     {child.birth_date ? new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
                   </td>
-                  <td className="p-4 text-slate-600 text-sm">{child.parent_name || '-'}</td>
+                  <td className="p-4 text-slate-600 text-sm">{child.user?.name || child.parent_name || '-'}</td>
                   <td className="p-4 text-center">
                     <button
                       onClick={() => navigate(`/nakes/children/${child.id}`)}
@@ -209,30 +227,38 @@ export const NakesChildrenData: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
                   >
-                    <option value="Laki-laki">Laki-laki</option>
-                    <option value="Perempuan">Perempuan</option>
+                    <option value="L">Laki-laki</option>
+                    <option value="P">Perempuan</option>
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Nama Orang Tua/Wali</label>
-                  <input
-                    type="text"
-                    value={formData.parent_name}
-                    onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                  />
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Orang Tua / Wali</label>
+                  <select
+                    required
+                    value={formData.user_id}
+                    onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                  >
+                    <option value="" disabled>Pilih Orang Tua...</option>
+                    {parents.map((parent) => (
+                      <option key={parent.id} value={parent.id}>
+                        {parent.name} {parent.nik ? `(${parent.nik})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">NIK Orang Tua/Wali</label>
-                  <input
-                    type="text"
-                    value={formData.parent_nik}
-                    onChange={(e) => setFormData({ ...formData, parent_nik: e.target.value })}
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Alamat Lengkap</label>
+                  <textarea
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                  />
+                    rows={2}
+                    placeholder="Contoh: Jl. Merdeka No. 10, Bandung"
+                  ></textarea>
                 </div>
               </div>
 
