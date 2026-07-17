@@ -52,10 +52,13 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
         };
       });
 
+    const sortedChildPoints = [...childPoints].sort((a, b) => a.month - b.month);
+    const lastMeasurementAge = sortedChildPoints.length > 0 ? sortedChildPoints[sortedChildPoints.length - 1].month : -1;
+
     // 3. Map predictions to chart points
     const predPoints = predictions
       ? predictions
-        .filter((p) => p.age >= startMonth && p.age <= endMonth)
+        .filter((p) => p.age >= startMonth && p.age <= endMonth && p.age > lastMeasurementAge)
         .map((p) => {
           const whoRef = getInterpolatedRecord(p.age, gender, chartType);
 
@@ -77,8 +80,8 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
       : [];
 
     // Connect actual line and prediction line so they start exactly from the last measurement
-    if (childPoints.length > 0 && predPoints.length > 0) {
-      const lastChildPoint = childPoints[childPoints.length - 1];
+    if (sortedChildPoints.length > 0 && predPoints.length > 0) {
+      const lastChildPoint = sortedChildPoints[sortedChildPoints.length - 1];
       // Set predictionValue so the purple line starts exactly where the blue line ends
       lastChildPoint.predictionValue = lastChildPoint.childValue as number;
     }
@@ -113,8 +116,9 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
   const unit = chartType === 'height' ? 'cm' : chartType === 'weight' ? 'kg' : 'cm';
   const labelText = chartType === 'height' ? 'Tinggi Badan (cm)' : chartType === 'weight' ? 'Berat Badan (kg)' : 'Lingkar Kepala (cm)';
 
-  const childLineColor = gender === 'Perempuan' ? '#ec4899' : '#0284c7';
-  const childActiveDotColor = gender === 'Perempuan' ? '#be185d' : '#0369a1';
+  const isGirl = gender === 'P' || gender === 'Perempuan';
+  const childLineColor = isGirl ? '#ec4899' : '#0284c7';
+  const childActiveDotColor = isGirl ? '#be185d' : '#0369a1';
 
   const xTicks = useMemo(() => {
     if (timeRange === '0-6m') {
@@ -197,7 +201,7 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={chartData}
-          margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
+          margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#d8dde3ff" />
           <XAxis

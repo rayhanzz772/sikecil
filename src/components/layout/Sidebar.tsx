@@ -30,9 +30,7 @@ export const Sidebar: React.FC = () => {
   const nakesLinks = [
     { to: '/nakes/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/nakes/children', icon: <Baby size={20} />, label: 'Data Anak' },
-    { to: '/nakes/measurements', icon: <Activity size={20} />, label: 'Input Pengukuran' },
-    { to: '/nakes/history', icon: <FileText size={20} />, label: 'Riwayat & Grafik' },
-    { to: '/nakes/prediction', icon: <BrainCircuit size={20} />, label: 'Prediksi AI' },
+    { to: '/nakes/reports', icon: <FileText size={20} />, label: 'Laporan' }
   ];
 
   const links = user?.role === 'admin' ? adminLinks : nakesLinks;

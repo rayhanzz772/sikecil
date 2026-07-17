@@ -165,6 +165,7 @@ export const RoleManagement: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Kode</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Nama</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Akses Global</th>
@@ -173,8 +174,11 @@ export const RoleManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {roles.map((role) => (
+              {roles.map((role, index) => (
                 <tr key={role.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
+                    {index + 1}
+                  </td>
                   <td className="p-4 text-slate-800 font-mono text-sm">{role.code}</td>
                   <td className="p-4 text-slate-800 font-medium">{role.name}</td>
                   <td className="p-4 text-slate-600">

@@ -390,11 +390,12 @@ const HCFA_GIRLS_MILESTONES: WHORecord[] = [
 
 // Helper to interpolate between WHO records smoothly
 export function getInterpolatedRecord(month: number, gender: Gender, type: 'height' | 'weight' | 'head'): WHORecord {
+  const isBoy = gender === 'L' || gender === 'Laki-laki';
   const milestones = type === 'height'
-    ? (gender === 'Laki-laki' ? HAZ_BOYS_MILESTONES : HAZ_GIRLS_MILESTONES)
+    ? (isBoy ? HAZ_BOYS_MILESTONES : HAZ_GIRLS_MILESTONES)
     : type === 'weight'
-      ? (gender === 'Laki-laki' ? WAZ_BOYS_MILESTONES : WAZ_GIRLS_MILESTONES)
-      : (gender === 'Laki-laki' ? HCFA_BOYS_MILESTONES : HCFA_GIRLS_MILESTONES);
+      ? (isBoy ? WAZ_BOYS_MILESTONES : WAZ_GIRLS_MILESTONES)
+      : (isBoy ? HCFA_BOYS_MILESTONES : HCFA_GIRLS_MILESTONES);
 
   // Bound the input month
   const targetMonth = Math.max(0, Math.min(60, month));
@@ -450,7 +451,7 @@ export function generateWHOChartData(gender: Gender, timeRange: string = '0-24m'
   } else {
     let startMonth = 0;
     let endMonth = 24;
-    
+
     if (timeRange === '6-24m') { startMonth = 6; endMonth = 24; }
     else if (timeRange === '24-60m') { startMonth = 24; endMonth = 60; }
     else if (timeRange === '0-60m') { startMonth = 0; endMonth = 60; }

@@ -29,7 +29,8 @@ import {
   MeasurementInput, 
   HistoryChart, 
   Prediction,
-  ChildDetail
+  ChildDetail,
+  NakesReports
 } from './pages/nakes';
 
 // Ortu Pages
@@ -71,6 +72,7 @@ export default function App() {
                   <Route path="/nakes/measurements" element={<MeasurementInput />} />
                   <Route path="/nakes/history" element={<HistoryChart />} />
                   <Route path="/nakes/prediction" element={<Prediction />} />
+                  <Route path="/nakes/reports" element={<NakesReports />} />
                 </Route>
               </Route>
 

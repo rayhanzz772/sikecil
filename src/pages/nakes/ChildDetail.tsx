@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Save, Activity, X } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Activity, X, Sparkles, RefreshCw } from 'lucide-react';
 import GrowthChart from '../../components/GrowthChart';
-import { getStuntingStatus, getWeightStatus } from '../../utils/whoStandards';
+import { getHeadCircumferenceStatus, getStuntingStatus, getWeightStatus } from '../../utils/whoStandards';
 import { childService } from '../../services/childService';
 import { measurementService } from '../../services/measurementService';
+import { predictionService } from '../../services/predictionService';
+import { PredictionResponse } from '../../types';
 
 export const ChildDetail: React.FC = () => {
   const { childId } = useParams<{ childId: string }>();
@@ -14,6 +16,10 @@ export const ChildDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'height' | 'weight' | 'head'>('height');
+
+  const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const [predictionStale, setPredictionStale] = useState(false);
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -66,8 +72,78 @@ export const ChildDetail: React.FC = () => {
     }
   };
 
+  const fetchLatestPrediction = async () => {
+    if (!childId) return;
+    try {
+      const res = await predictionService.getLatest(childId);
+      const data = res.data as any;
+      
+      let record = null;
+      if (Array.isArray(data) && data.length > 0) {
+        record = data[0];
+      } else if (data?.prediction) {
+        record = data.prediction;
+      } else if (data?.id && data?.results) {
+        record = data;
+      }
+
+      if (record && record.results) {
+        let results = record.results;
+        if (typeof results === 'string') {
+          try {
+            results = JSON.parse(results);
+          } catch (e) {
+            console.error('Failed to parse prediction results', e);
+          }
+        }
+        setPredictions(results);
+        setPredictionStale(data.is_stale || false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch prediction:', error);
+    }
+  };
+
+  const handleGeneratePrediction = async () => {
+    if (!childId) return;
+    if (measurements.length < 3) {
+      alert('Butuh minimal 3 data pengukuran untuk prediksi AI');
+      return;
+    }
+    setIsPredicting(true);
+    try {
+      const res = await predictionService.generate(childId, 6);
+      const predictionData = res.data;
+      let record = null;
+      if (Array.isArray(predictionData) && predictionData.length > 0) {
+        record = predictionData[0];
+      } else if (predictionData?.results) {
+        record = predictionData;
+      }
+
+      if (record && record.results) {
+        let results = record.results;
+        if (typeof results === 'string') {
+          try {
+            results = JSON.parse(results);
+          } catch (e) {
+            console.error('Failed to parse generate results', e);
+          }
+        }
+        setPredictions(results);
+        setPredictionStale(false);
+      }
+    } catch (error: any) {
+      console.error('Failed to generate prediction:', error);
+      alert(error?.response?.data?.message || 'Gagal memproses prediksi AI');
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchLatestPrediction();
   }, [childId]);
 
   const handleSubmitMeasurement = async (e: React.FormEvent) => {
@@ -114,6 +190,7 @@ export const ChildDetail: React.FC = () => {
 
   const stuntingStatus = latestMeasurement ? getStuntingStatus(latestMeasurement.height, latestMeasurement.ageMonths, child.gender, latestMeasurement.haz, latestMeasurement.status_haz) : null;
   const weightStatus = latestMeasurement ? getWeightStatus(latestMeasurement.weight, latestMeasurement.ageMonths, child.gender, latestMeasurement.waz, latestMeasurement.status_waz) : null;
+  const headStatus = latestMeasurement ? getHeadCircumferenceStatus(latestMeasurement.headCircumference, latestMeasurement.ageMonths, child.gender, latestMeasurement.hcaz, latestMeasurement.status_hcaz) : null;
 
   return (
     <div className="space-y-6">
@@ -132,7 +209,7 @@ export const ChildDetail: React.FC = () => {
         {/* Profile Card */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
           <div className="flex items-center gap-4 mb-6">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-sm ${child.gender === 'Laki-laki' ? 'bg-sky-500' : 'bg-pink-500'}`}>
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-sm ${child.gender === 'L' ? 'bg-sky-500' : 'bg-pink-500'}`}>
               {child.name.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -181,6 +258,13 @@ export const ChildDetail: React.FC = () => {
                     {weightStatus?.status || 'N/A'}
                   </span>
                 </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Lingkar Kepala</span>
+                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${headStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                    {headStatus?.status || 'N/A'}
+                  </span>
+                </div>
               </div>
             ) : (
               <p className="text-xs text-slate-500 italic">Belum ada data pengukuran.</p>
@@ -192,7 +276,20 @@ export const ChildDetail: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800">Grafik Pertumbuhan</h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-slate-800">Grafik Pertumbuhan</h2>
+                <button
+                  onClick={handleGeneratePrediction}
+                  disabled={isPredicting || measurements.length < 3}
+                  className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+                >
+                  <Sparkles size={14} />
+                  {isPredicting ? 'Memproses...' : 'Prediksi AI'}
+                </button>
+                {predictionStale && predictions && (
+                  <span className="text-xs text-amber-600 font-medium">Data baru tersedia, perbarui prediksi</span>
+                )}
+              </div>
               <div className="flex bg-slate-100 p-1 rounded-xl">
                 <button
                   onClick={() => setActiveTab('height')}
@@ -221,6 +318,7 @@ export const ChildDetail: React.FC = () => {
                 measurements={measurements}
                 timeRange="0-24m"
                 chartType={activeTab}
+                predictions={predictions?.prediction}
               />
             </div>
           </div>

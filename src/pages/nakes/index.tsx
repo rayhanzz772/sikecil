@@ -3,18 +3,13 @@ import { Pagination } from '../../components/Pagination';
 import { useNavigate } from 'react-router-dom';
 import { Plus, X, ArrowRight } from 'lucide-react';
 import { useNakes } from '../../context/NakesContext';
+import { DashboardOverview } from './DashboardOverview';
+import { ReportsOverview } from '../../components/ReportsOverview';
 
 export * from './ChildDetail';
 
 export const NakesDashboard: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Dashboard Posyandu</h1>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p className="text-slate-600">Statistik dan ringkasan data posyandu Anda.</p>
-      </div>
-    </div>
-  );
+  return <DashboardOverview />;
 };
 
 export const NakesChildrenData: React.FC = () => {
@@ -134,6 +129,7 @@ export const NakesChildrenData: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">NIK</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Nama Anak</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Jenis Kelamin</th>
@@ -143,8 +139,11 @@ export const NakesChildrenData: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {childrenData.map((child) => (
+              {childrenData.map((child, index) => (
                 <tr key={child.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
+                    {(page - 1) * perPage + index + 1}
+                  </td>
                   <td className="p-4 text-slate-700 font-mono text-sm">{child.nik || '-'}</td>
                   <td className="p-4 text-slate-800 font-bold">{child.name}</td>
                   <td className="p-4 text-slate-600">
@@ -318,3 +317,8 @@ export const Prediction: React.FC = () => {
     </div>
   );
 };
+
+export const NakesReports: React.FC = () => {
+  return <ReportsOverview />;
+};
+

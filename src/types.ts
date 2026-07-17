@@ -1,4 +1,4 @@
-export type Gender = 'Laki-laki' | 'Perempuan';
+export type Gender = 'Laki-laki' | 'Perempuan' | 'L' | 'P';
 
 export interface Child {
   id: string;

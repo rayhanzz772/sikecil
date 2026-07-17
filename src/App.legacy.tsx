@@ -50,7 +50,6 @@ const getCurrentDateMinusMonths = (months: number): string => {
   return d.toISOString().split('T')[0];
 };
 
-const api_url_predict = 'http://localhost:5000/api/predict/v3';
 
 // Seed Data
 const DEFAULT_CHILDREN: Child[] = [
@@ -152,7 +151,7 @@ export default function App() {
 
   // UI state
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
-  const [timeRange, setTimeRange] = useState<string>('0-6m'); // 0-6m, 0-24m, 6-24m, 24-60m, 0-60m
+  const [timeRange, setTimeRange] = useState<string>('0-24m'); // 0-6m, 0-24m, 6-24m, 24-60m, 0-60m
   const [isChildModalOpen, setIsChildModalOpen] = useState(false);
   const [isMeasureModalOpen, setIsMeasureModalOpen] = useState(false);
   const [editingChild, setEditingChild] = useState<Child | null>(null);
@@ -239,11 +238,46 @@ export default function App() {
     }
   };
 
+  const fetchLatestPredictionForChild = async (childId: string) => {
+    try {
+      const { predictionService } = await import('./services/predictionService');
+      const res = await predictionService.getLatest(childId);
+      const data = res.data as any;
+      
+      let record = null;
+      if (Array.isArray(data) && data.length > 0) {
+        record = data[0];
+      } else if (data?.prediction) {
+        record = data.prediction;
+      } else if (data?.id && data?.results) {
+        record = data;
+      }
+
+      if (record && record.results) {
+        let results = record.results;
+        if (typeof results === 'string') {
+          try {
+            results = JSON.parse(results);
+          } catch (e) {
+            console.error('Failed to parse prediction results', e);
+          }
+        }
+        setPredictions(results);
+      } else {
+        setPredictions(null);
+      }
+    } catch (error) {
+      console.error('Failed to fetch prediction:', error);
+      setPredictions(null);
+    }
+  };
+
   useEffect(() => {
     if (selectedChildId && children.length > 0) {
       const child = children.find(c => c.id === selectedChildId) || children[0];
       if (child) {
         fetchMeasurementsForChild(child.id, child.birthDate);
+        fetchLatestPredictionForChild(child.id);
       }
     }
   }, [selectedChildId, children]);
@@ -419,33 +453,27 @@ export default function App() {
 
     setIsPredicting(true);
     try {
-      const history = currentMeasurements.map(m => ({
-        age: Math.round(m.ageMonths),
-        height: m.height,
-        weight: m.weight,
-        head_circ: m.headCircumference
-      }));
-
-      const payload = {
-        sex: currentChild.gender === 'Laki-laki' ? 'L' : 'P',
-        history,
-        horizon: 6
-      };
-
-      const response = await fetch(api_url_predict, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Gagal menghubungi API');
+      const { predictionService } = await import('./services/predictionService');
+      const response = await predictionService.generate(currentChild.id);
+      const data = response.data;
+      let record = null;
+      if (Array.isArray(data) && data.length > 0) {
+        record = data[0];
+      } else if (data?.results) {
+        record = data;
       }
 
-      const data = await response.json();
-      setPredictions(data);
+      let results = record?.results;
+      if (typeof results === 'string') {
+        try {
+          results = JSON.parse(results);
+        } catch (e) {
+          console.error('Failed to parse generate results', e);
+        }
+      }
+      setPredictions(results);
       triggerStatus('Prediksi berhasil dimuat', 'success');
-      setActiveChartTab('height'); // Switch to height tab to view
+      setActiveChartTab('height');
     } catch (e) {
       console.error(e);
       triggerStatus('Gagal memproses prediksi AI', 'error');

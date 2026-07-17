@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Pagination } from '../../components/Pagination';
 import { desaService, Desa } from '../../services/desaService';
 import { Edit2, Trash2, Plus, X } from 'lucide-react';
+import { DashboardOverview } from '../nakes/DashboardOverview';
+import { ReportsOverview } from '../../components/ReportsOverview';
 
 export const MasterDesa: React.FC = () => {
   const [desas, setDesas] = useState<Desa[]>([]);
@@ -212,14 +214,7 @@ export const MasterDesa: React.FC = () => {
 };
 
 export const AdminDashboard: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Admin Dashboard</h1>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p className="text-slate-600">Selamat datang di Panel Admin SiKecil.</p>
-      </div>
-    </div>
-  );
+  return <DashboardOverview />;
 };
 
 export const UserManagement: React.FC = () => {
@@ -403,6 +398,7 @@ export const UserManagement: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Nama</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Username/Email</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Role</th>
@@ -412,8 +408,11 @@ export const UserManagement: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {users.map((user, index) => (
                 <tr key={user.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
+                    {(page - 1) * perPage + index + 1}
+                  </td>
                   <td className="p-4 text-slate-800 font-medium">{user.name}</td>
                   <td className="p-4 text-slate-600 text-sm">
                     <div>{user.username}</div>
@@ -878,6 +877,7 @@ export const AdminChildrenData: React.FC = () => {
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">NIK</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Nama Anak</th>
                 <th className="p-4 font-bold text-slate-600 text-sm">Jenis Kelamin</th>
@@ -887,8 +887,11 @@ export const AdminChildrenData: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {childrenData.map((child) => (
+              {childrenData.map((child, index) => (
                 <tr key={child.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
+                    {(page - 1) * perPage + index + 1}
+                  </td>
                   <td className="p-4 text-slate-700 font-mono text-sm">{child.nik || '-'}</td>
                   <td className="p-4 text-slate-800 font-bold">{child.name}</td>
                   <td className="p-4 text-slate-600">
@@ -913,12 +916,5 @@ export const AdminChildrenData: React.FC = () => {
 };
 
 export const AdminReports: React.FC = () => {
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Laporan</h1>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p className="text-slate-600">Laporan stunting dan gizi.</p>
-      </div>
-    </div>
-  );
+  return <ReportsOverview />;
 };
