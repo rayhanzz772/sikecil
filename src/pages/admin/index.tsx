@@ -5,6 +5,7 @@ import { desaService, Desa } from '../../services/desaService';
 import { Edit2, Trash2, Plus, X } from 'lucide-react';
 import { DashboardOverview } from '../nakes/DashboardOverview';
 import { ReportsOverview } from '../../components/ReportsOverview';
+import { useToast } from '../../components/Toast';
 
 export const MasterDesa: React.FC = () => {
   const [desas, setDesas] = useState<Desa[]>([]);
@@ -13,6 +14,7 @@ export const MasterDesa: React.FC = () => {
   const [editingDesa, setEditingDesa] = useState<Desa | null>(null);
   const [formData, setFormData] = useState({ name: '', kecamatan: '', kabupaten: '' });
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const toast = useToast();
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -50,9 +52,10 @@ export const MasterDesa: React.FC = () => {
       setEditingDesa(null);
       setFormData({ name: '', kecamatan: '', kabupaten: '' });
       fetchDesas();
+      toast.success('Data desa berhasil disimpan.');
     } catch (error) {
       console.error('Failed to save desa:', error);
-      alert('Gagal menyimpan data desa.');
+      toast.error('Gagal menyimpan data desa.');
     }
   };
 
@@ -61,9 +64,10 @@ export const MasterDesa: React.FC = () => {
       try {
         await desaService.delete(id);
         fetchDesas();
+        toast.success('Desa berhasil dihapus.');
       } catch (error) {
         console.error('Failed to delete desa:', error);
-        alert('Gagal menghapus desa.');
+        toast.error('Gagal menghapus desa.');
       }
     }
   };
@@ -80,127 +84,124 @@ export const MasterDesa: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-extrabold text-slate-800">Master Data Desa</h1>
+        <h1 className="text-lg font-bold text-slate-800">Master Data Desa</h1>
         <button
           onClick={() => openModal()}
-          className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-sky-700 flex items-center gap-2"
+          className="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-700 flex items-center gap-1.5"
         >
-          <Plus size={18} /> Tambah Desa
+          <Plus size={15} /> Tambah Desa
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          <div className="py-8 text-center text-sm text-slate-400">Memuat data...</div>
         ) : desas.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">Belum ada data desa.</div>
+          <div className="py-8 text-center text-sm text-slate-400">Belum ada data desa.</div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-4 font-bold text-slate-600 text-sm">No</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Nama Desa</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Kecamatan</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Kabupaten</th>
-                <th className="p-4 font-bold text-slate-600 text-sm w-32 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {desas.map((desa, index) => (
-                <tr key={desa.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="p-4 text-slate-700">{index + 1}</td>
-                  <td className="p-4 text-slate-800 font-medium">{desa.name}</td>
-                  <td className="p-4 text-slate-600">{desa.kecamatan || '-'}</td>
-                  <td className="p-4 text-slate-600">{desa.kabupaten || '-'}</td>
-                  <td className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => openModal(desa)}
-                        className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(desa.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-10">No</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Desa</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Kecamatan</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Kabupaten</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-20 text-center">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {desas.map((desa, index) => (
+                  <tr key={desa.id} className="hover:bg-slate-50/60">
+                    <td className="px-3 py-1.5 text-slate-500 text-xs">{(page - 1) * perPage + index + 1}</td>
+                    <td className="px-3 py-1.5 text-slate-800 font-medium">{desa.name}</td>
+                    <td className="px-3 py-1.5 text-slate-600">{desa.kecamatan || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-600">{desa.kabupaten || '-'}</td>
+                    <td className="px-3 py-1.5 text-center">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button
+                          onClick={() => openModal(desa)}
+                          className="p-1 text-sky-600 hover:bg-sky-50 rounded transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(desa.id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm shadow-2xl">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-800">
                 {editingDesa ? 'Edit Desa' : 'Tambah Desa'}
               </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Nama Desa</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                    placeholder="Masukkan nama desa..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Kecamatan</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.kecamatan}
-                    onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                    placeholder="Masukkan kecamatan..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Kabupaten</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.kabupaten}
-                    onChange={(e) => setFormData({ ...formData, kabupaten: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                    placeholder="Masukkan kabupaten..."
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="p-5 space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Desa</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                  placeholder="Masukkan nama desa"
+                />
               </div>
-              <div className="mt-8 flex justify-end gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Kecamatan</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.kecamatan}
+                  onChange={(e) => setFormData({ ...formData, kecamatan: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                  placeholder="Masukkan kecamatan"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Kabupaten</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.kabupaten}
+                  onChange={(e) => setFormData({ ...formData, kabupaten: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                  placeholder="Masukkan kabupaten"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-3 py-1.5 text-sm text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition-colors shadow-sm shadow-sky-600/20"
+                  className="px-3 py-1.5 text-sm bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors"
                 >
                   Simpan
                 </button>
@@ -223,6 +224,7 @@ export const UserManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any | null>(null);
+  const toast = useToast();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -305,9 +307,10 @@ export const UserManagement: React.FC = () => {
       setIsModalOpen(false);
       setEditingUser(null);
       fetchUsers();
+      toast.success('Data pengguna berhasil disimpan.');
     } catch (error) {
       console.error('Failed to save user:', error);
-      alert('Gagal menyimpan data pengguna.');
+      toast.error('Gagal menyimpan data pengguna.');
     }
   };
 
@@ -317,9 +320,10 @@ export const UserManagement: React.FC = () => {
         const { userService } = await import('../../services/userService');
         await userService.delete(id);
         fetchUsers();
+        toast.success('Pengguna berhasil dihapus.');
       } catch (error) {
         console.error('Failed to delete user:', error);
-        alert('Gagal menghapus pengguna.');
+        toast.error('Gagal menghapus pengguna.');
       }
     }
   };
@@ -352,36 +356,36 @@ export const UserManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-extrabold text-slate-800">User Management</h1>
+        <h1 className="text-lg font-bold text-slate-800">User Management</h1>
         <button
           onClick={() => openModal()}
-          className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-sky-700 flex items-center gap-2"
+          className="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-700 flex items-center gap-1.5"
         >
-          <Plus size={18} /> Tambah Pengguna
+          <Plus size={15} /> Tambah Pengguna
         </button>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+      <div className="flex flex-col sm:flex-row items-end gap-3 bg-white p-3 rounded-lg border border-slate-200">
         <div className="flex-1 w-full">
-          <label className="block text-xs font-bold text-slate-500 mb-1">Pencarian</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Pencarian</label>
           <input
             type="text"
             placeholder="Cari nama atau email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
           />
         </div>
-        <div className="w-full sm:w-1/3">
-          <label className="block text-xs font-bold text-slate-500 mb-1">Filter Role</label>
+        <div className="w-full sm:w-48">
+          <label className="block text-xs font-medium text-slate-500 mb-1">Filter Role</label>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value)}
-            className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
           >
-            <option value="">-- Semua Role --</option>
+            <option value="">Semua Role</option>
             <option value="ADMIN">Admin</option>
             <option value="NAKES">Nakes</option>
             <option value="ORTU">Orang Tua</option>
@@ -389,125 +393,124 @@ export const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          <div className="py-8 text-center text-sm text-slate-400">Memuat data...</div>
         ) : users.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">Tidak ada data pengguna ditemukan.</div>
+          <div className="py-8 text-center text-sm text-slate-400">Tidak ada data pengguna ditemukan.</div>
         ) : (
-          <table className="w-full text-left border-collapse min-w-[600px]">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Nama</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Username/Email</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Role</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Posyandu</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Status</th>
-                <th className="p-4 font-bold text-slate-600 text-sm w-24 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((user, index) => (
-                <tr key={user.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
-                    {(page - 1) * perPage + index + 1}
-                  </td>
-                  <td className="p-4 text-slate-800 font-medium">{user.name}</td>
-                  <td className="p-4 text-slate-600 text-sm">
-                    <div>{user.username}</div>
-                    <div className="text-slate-400 text-xs">{user.email}</div>
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    <span className="bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs font-bold">
-                      {user.role?.name || user.role?.code || user.role || '-'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-600 text-sm">{user.posyandu?.name || '-'}</td>
-                  <td className="p-4">
-                    {user.status ? (
-                      <span className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-xs font-bold">Aktif</span>
-                    ) : (
-                      <span className="text-red-600 bg-red-50 px-2 py-1 rounded-md text-xs font-bold">Nonaktif</span>
-                    )}
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button
-                        onClick={() => openModal(user)}
-                        className="p-1.5 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[600px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-10 text-center">No</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Username/Email</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Role</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Posyandu</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-16 text-center">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {users.map((user, index) => (
+                  <tr key={user.id} className="hover:bg-slate-50/60">
+                    <td className="px-3 py-1.5 text-center text-xs text-slate-500">
+                      {(page - 1) * perPage + index + 1}
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-800 font-medium">{user.name}</td>
+                    <td className="px-3 py-1.5 text-slate-600">
+                      <div>{user.username}</div>
+                      <div className="text-slate-400 text-xs">{user.email}</div>
+                    </td>
+                    <td className="px-3 py-1.5">
+                      <span className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-xs font-medium">
+                        {user.role?.name || user.role?.code || user.role || '-'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 text-xs">{user.posyandu?.name || '-'}</td>
+                    <td className="px-3 py-2">
+                      {user.status ? (
+                        <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-xs font-medium">Aktif</span>
+                      ) : (
+                        <span className="text-red-700 bg-red-50 px-1.5 py-0.5 rounded text-xs font-medium">Nonaktif</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-1.5 text-center">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button
+                          onClick={() => openModal(user)}
+                          className="p-1 text-sky-600 hover:bg-sky-50 rounded transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xl shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-slate-800">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+              <h2 className="text-base font-bold text-slate-800">
                 {editingUser ? 'Edit Pengguna' : 'Tambah Pengguna'}
               </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="p-5 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Nama Lengkap</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Username</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Username</label>
                   <input
                     type="text"
                     required
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Email</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
                   <input
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
                     Password {editingUser && <span className="text-xs font-normal text-slate-400">(Kosongkan jika tidak diubah)</span>}
                   </label>
                   <input
@@ -515,37 +518,36 @@ export const UserManagement: React.FC = () => {
                     required={!editingUser}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Role</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Role</label>
                   <select
                     required
                     value={formData.role_id}
                     onChange={(e) => setFormData({ ...formData, role_id: e.target.value, posyandu_id: '' })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-white"
                   >
-                    <option value="" disabled>-- Pilih Role --</option>
+                    <option value="" disabled>Pilih Role</option>
                     <option value="role_admin_id_001">Admin</option>
                     <option value="role_nakes_id_001">Nakes</option>
                     <option value="role_ortu_id_001">Orang Tua</option>
                   </select>
                 </div>
 
-                {/* Posyandu dropdown only for NAKES or ORTU */}
                 {(formData.role_id === 'role_nakes_id_001' || formData.role_id === 'role_ortu_id_001') && (
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-1">Posyandu</label>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Posyandu</label>
                     <select
                       value={formData.posyandu_id}
                       onChange={(e) => setFormData({ ...formData, posyandu_id: e.target.value })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-white"
                     >
-                      <option value="">-- Tidak ada --</option>
+                      <option value="">Tidak ada</option>
                       {posyandus.map(posyandu => (
                         <option key={posyandu.id} value={posyandu.id}>{posyandu.name}</option>
                       ))}
@@ -560,23 +562,23 @@ export const UserManagement: React.FC = () => {
                     type="checkbox"
                     checked={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.checked })}
-                    className="w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
+                    className="w-3.5 h-3.5 text-sky-600 rounded border-slate-300 focus:ring-sky-500"
                   />
-                  <span className="text-sm font-bold text-slate-700">User Aktif</span>
+                  <span className="text-sm font-medium text-slate-700">User Aktif</span>
                 </label>
               </div>
 
-              <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-3 py-1.5 text-sm text-slate-600 font-medium hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition-colors shadow-sm shadow-sky-600/20"
+                  className="px-3 py-1.5 text-sm bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700 transition-colors"
                 >
                   Simpan
                 </button>
@@ -600,6 +602,7 @@ export const MasterPosyandu: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const perPage = 10; // Testing pagination
+  const toast = useToast();
 
   const fetchDesas = async () => {
     try {
@@ -652,9 +655,10 @@ export const MasterPosyandu: React.FC = () => {
       setEditingPosyandu(null);
       setFormData({ name: '', desa_id: '' });
       fetchPosyandus();
+      toast.success('Data posyandu berhasil disimpan.');
     } catch (error) {
       console.error('Failed to save posyandu:', error);
-      alert('Gagal menyimpan data posyandu.');
+      toast.error('Gagal menyimpan data posyandu.');
     }
   };
 
@@ -664,9 +668,10 @@ export const MasterPosyandu: React.FC = () => {
         const { posyanduService } = await import('../../services/posyanduService');
         await posyanduService.delete(id);
         fetchPosyandus();
+        toast.success('Posyandu berhasil dihapus.');
       } catch (error) {
         console.error('Failed to delete posyandu:', error);
-        alert('Gagal menghapus posyandu.');
+        toast.error('Gagal menghapus posyandu.');
       }
     }
   };
@@ -683,129 +688,128 @@ export const MasterPosyandu: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-extrabold text-slate-800">Master Data Posyandu</h1>
+        <h1 className="text-lg font-bold text-slate-800">Master Data Posyandu</h1>
         <button
           onClick={() => openModal()}
-          className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-sky-700 flex items-center gap-2"
+          className="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-700 flex items-center gap-1.5"
         >
-          <Plus size={18} /> Tambah Posyandu
+          <Plus size={15} /> Tambah Posyandu
         </button>
       </div>
 
-      <div className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <label className="font-bold text-slate-700">Filter Desa:</label>
+      <div className="flex items-center gap-3 bg-white p-3 rounded-lg border border-slate-200">
+        <label className="text-xs font-medium text-slate-500">Filter Desa:</label>
         <select
           value={filterDesaId}
           onChange={(e) => setFilterDesaId(e.target.value)}
-          className="px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none min-w-[200px]"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none min-w-[180px]"
         >
-          <option value="">-- Semua Desa --</option>
+          <option value="">Semua Desa</option>
           {desas.map(desa => (
             <option key={desa.id} value={desa.id}>{desa.name}</option>
           ))}
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          <div className="py-8 text-center text-sm text-slate-400">Memuat data...</div>
         ) : posyandus.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">Belum ada data posyandu.</div>
+          <div className="py-8 text-center text-sm text-slate-400">Belum ada data posyandu.</div>
         ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-4 font-bold text-slate-600 text-sm">No</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Nama Posyandu</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Desa</th>
-                <th className="p-4 font-bold text-slate-600 text-sm w-32 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {posyandus.map((posyandu, index) => (
-                <tr key={posyandu.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="p-4 text-slate-700">{index + 1}</td>
-                  <td className="p-4 text-slate-800 font-medium">{posyandu.name}</td>
-                  <td className="p-4 text-slate-600">{posyandu.desa?.name || '-'}</td>
-                  <td className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => openModal(posyandu)}
-                        className="p-2 text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(posyandu.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-10">No</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Posyandu</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Desa</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-20 text-center">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {posyandus.map((posyandu, index) => (
+                  <tr key={posyandu.id} className="hover:bg-slate-50/60">
+                    <td className="px-3 py-1.5 text-xs text-slate-500">{(page - 1) * perPage + index + 1}</td>
+                    <td className="px-3 py-1.5 text-slate-800 font-medium">{posyandu.name}</td>
+                    <td className="px-3 py-1.5 text-slate-600">{posyandu.desa?.name || '-'}</td>
+                    <td className="px-3 py-1.5 text-center">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button
+                          onClick={() => openModal(posyandu)}
+                          className="p-1 text-sky-600 hover:bg-sky-50 rounded transition-colors"
+                          title="Edit"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(posyandu.id)}
+                          className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-sm shadow-2xl">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100">
+              <h2 className="text-base font-bold text-slate-800">
                 {editingPosyandu ? 'Edit Posyandu' : 'Tambah Posyandu'}
               </h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-5 space-y-3">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Nama Posyandu</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Posyandu</label>
                 <input
                   type="text"
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                  placeholder="Masukkan nama posyandu..."
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                  placeholder="Masukkan nama posyandu"
                 />
               </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Desa</label>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Desa</label>
                 <select
                   required
                   value={formData.desa_id}
                   onChange={(e) => setFormData({ ...formData, desa_id: e.target.value })}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-white"
                 >
-                  <option value="" disabled>-- Pilih Desa --</option>
+                  <option value="" disabled>Pilih Desa</option>
                   {desas.map(desa => (
                     <option key={desa.id} value={desa.id}>{desa.name}</option>
                   ))}
                 </select>
               </div>
-              <div className="mt-8 flex justify-end gap-3">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-3 py-1.5 text-sm text-slate-600 font-medium hover:bg-slate-100 rounded-lg"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition-colors shadow-sm shadow-sky-600/20"
+                  className="px-3 py-1.5 text-sm bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700"
                 >
                   Simpan
                 </button>
@@ -852,62 +856,62 @@ export const AdminChildrenData: React.FC = () => {
   }, [search, page]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Data Anak (Global)</h1>
+    <div className="space-y-4">
+      <h1 className="text-lg font-bold text-slate-800">Data Anak (Global)</h1>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <label className="block text-xs font-bold text-slate-500 mb-1">Pencarian</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Cari nama atau NIK anak..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-1/2 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-          />
-        </div>
+      <div className="bg-white p-3 rounded-lg border border-slate-200">
+        <label className="block text-xs font-medium text-slate-500 mb-1">Pencarian</label>
+        <input
+          type="text"
+          placeholder="Cari nama atau NIK anak..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-1/2 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+        />
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          <div className="py-8 text-center text-sm text-slate-400">Memuat data...</div>
         ) : childrenData.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">Tidak ada data anak ditemukan.</div>
+          <div className="py-8 text-center text-sm text-slate-400">Tidak ada data anak ditemukan.</div>
         ) : (
-          <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">NIK</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Nama Anak</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Jenis Kelamin</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Tanggal Lahir</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Posyandu</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Orang Tua</th>
-              </tr>
-            </thead>
-            <tbody>
-              {childrenData.map((child, index) => (
-                <tr key={child.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
-                    {(page - 1) * perPage + index + 1}
-                  </td>
-                  <td className="p-4 text-slate-700 font-mono text-sm">{child.nik || '-'}</td>
-                  <td className="p-4 text-slate-800 font-bold">{child.name}</td>
-                  <td className="p-4 text-slate-600">
-                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${child.gender === 'Laki-laki' ? 'bg-sky-100 text-sky-700' : 'bg-pink-100 text-pink-700'}`}>
-                      {child.gender}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    {child.birth_date ? new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                  </td>
-                  <td className="p-4 text-slate-600 text-sm font-bold text-sky-700">{child.user?.posyandu?.name || '-'}</td>
-                  <td className="p-4 text-slate-600 text-sm">{child.user.name || '-'}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[650px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-10 text-center">No</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">NIK</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Anak</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">JK</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tgl Lahir</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Posyandu</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Orang Tua</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {childrenData.map((child, index) => (
+                  <tr key={child.id} className="hover:bg-slate-50/60">
+                    <td className="px-3 py-1.5 text-center text-xs text-slate-500">
+                      {(page - 1) * perPage + index + 1}
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 font-mono text-xs">{child.nik || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-800 font-medium">{child.name}</td>
+                    <td className="px-3 py-1.5">
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${child.gender === 'Laki-laki' ? 'bg-sky-50 text-sky-700' : 'bg-pink-50 text-pink-700'}`}>
+                        {child.gender}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 text-xs">
+                      {child.birth_date ? new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                    </td>
+                    <td className="px-3 py-1.5 text-sky-700 font-medium text-xs">{child.user?.posyandu?.name || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-600 text-xs">{child.user.name || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>

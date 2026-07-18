@@ -25,11 +25,13 @@ interface GrowthChartProps {
 export default function GrowthChart({ gender, measurements, timeRange, chartType, predictions }: GrowthChartProps) {
 
   const { startMonth, endMonth } = useMemo(() => {
+    if (timeRange === '0-13w') return { startMonth: 0, endMonth: 3.5 };
     if (timeRange === '0-6m') return { startMonth: 0, endMonth: 6 };
+    if (timeRange === '0-24m') return { startMonth: 0, endMonth: 24 };
     if (timeRange === '6-24m') return { startMonth: 6, endMonth: 24 };
     if (timeRange === '24-60m') return { startMonth: 24, endMonth: 60 };
     if (timeRange === '0-60m') return { startMonth: 0, endMonth: 60 };
-    return { startMonth: 0, endMonth: 24 }; // default 0-24m
+    return { startMonth: 0, endMonth: 24 };
   }, [timeRange]);
 
   const chartData = useMemo(() => {
@@ -121,6 +123,11 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
   const childActiveDotColor = isGirl ? '#be185d' : '#0369a1';
 
   const xTicks = useMemo(() => {
+    if (timeRange === '0-13w') {
+      const t = [];
+      for (let w = 0; w <= 13; w++) t.push((w * 7) / 30.4375);
+      return t;
+    }
     if (timeRange === '0-6m') {
       const t = [];
       for (let w = 0; w <= 13; w++) t.push((w * 7) / 30.4375);
@@ -209,9 +216,9 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
             type="number"
             domain={[startMonth, endMonth]}
             ticks={xTicks}
-            tickCount={timeRange === '0-6m' ? undefined : (endMonth - startMonth <= 12 ? 13 : endMonth - startMonth === 24 ? 9 : 11)}
+            tickCount={(timeRange === '0-6m' || timeRange === '0-13w') ? undefined : (endMonth - startMonth <= 12 ? 13 : endMonth - startMonth === 24 ? 9 : 11)}
             tick={{ fill: '#64748b', fontSize: 10 }}
-            tickFormatter={(val) => timeRange === '0-6m' && val <= 3.0 ? `W${Math.round((val * 30.4375) / 7)}` : Math.round(val).toString()}
+            tickFormatter={(val) => (timeRange === '0-6m' || timeRange === '0-13w') && val <= 3.5 ? `W${Math.round((val * 30.4375) / 7)}` : Math.round(val).toString()}
             label={{ value: 'Usia', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 11 }}
           />
           <YAxis

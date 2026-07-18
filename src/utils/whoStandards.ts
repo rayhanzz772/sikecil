@@ -438,7 +438,12 @@ export function getInterpolatedRecord(month: number, gender: Gender, type: 'heig
 export function generateWHOChartData(gender: Gender, timeRange: string = '0-24m', type: 'height' | 'weight' | 'head'): WHORecord[] {
   const data: WHORecord[] = [];
 
-  if (timeRange === '0-6m') {
+  if (timeRange === '0-13w') {
+    for (let w = 0; w <= 13; w++) {
+      const monthEquivalent = (w * 7) / 30.4375;
+      data.push(getInterpolatedRecord(monthEquivalent, gender, type));
+    }
+  } else if (timeRange === '0-6m') {
     // Generate weekly points (Weeks 0 to 13)
     for (let w = 0; w <= 13; w++) {
       const monthEquivalent = (w * 7) / 30.4375;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, User } from '../context/AuthContext';
+import { useAuth, User, Role } from '../context/AuthContext';
 import api from '../services/api';
-import { Baby, Lock, User as UserIcon } from 'lucide-react';
+import { Baby, Lock, User as UserIcon, LogIn } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -18,39 +18,28 @@ export const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Assuming backend expects username & password and sets httpOnly cookie
-      // and returns user data (id, username, role, name)
       const response = await api.post('/auth/login', { username, password });
-      
+
       if (response.data && response.data.data) {
         const userData = response.data.data;
-        // Normalize role to match frontend types ('admin' | 'nakes' | 'ortu')
         let roleStr = '';
         if (typeof userData.role === 'string') {
           roleStr = userData.role;
         } else if (userData.role) {
           roleStr = userData.role.code || userData.role.name || JSON.stringify(userData.role);
         }
-        
+
         const rawRole = roleStr.toLowerCase();
         let normalizedRole: Role = 'nakes';
         if (rawRole.includes('admin')) normalizedRole = 'admin';
         else if (rawRole.includes('ortu') || rawRole.includes('orang tua')) normalizedRole = 'ortu';
-        
-        const user: User = {
-          ...userData,
-          role: normalizedRole
-        };
+
+        const user: User = { ...userData, role: normalizedRole };
         login(user);
-        
-        // Redirect based on role
-        if (user.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (user.role === 'ortu') {
-          navigate('/ortu/dashboard');
-        } else {
-          navigate('/nakes/dashboard');
-        }
+
+        if (user.role === 'admin') navigate('/admin/dashboard');
+        else if (user.role === 'ortu') navigate('/ortu/dashboard');
+        else navigate('/nakes/dashboard');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login gagal. Periksa username dan password Anda.');
@@ -60,37 +49,33 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-        <div className="bg-sky-600 p-8 text-center">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl mx-auto flex items-center justify-center mb-4 backdrop-blur-sm">
-            <Baby className="w-8 h-8 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-sky-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 bg-sky-500 rounded-xl mx-auto flex items-center justify-center mb-3 shadow-lg shadow-sky-500/30">
+            <Baby className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">SiKecil</h1>
-          <p className="text-sky-100 text-sm mt-1">Sistem Cerdas Pantau Tumbuh Kembang</p>
+          <h1 className="text-xl font-bold text-white">SiKecil</h1>
+          <p className="text-slate-400 text-xs mt-0.5">Sistem Cerdas Pantau Tumbuh Kembang</p>
         </div>
-        
-        <div className="p-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-6">Masuk ke Akun Anda</h2>
-          
+
+        <div className="bg-white rounded-2xl shadow-2xl p-6">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-semibold mb-6 border border-red-100">
+            <div className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs font-medium mb-4 border border-red-100">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username / Email</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Username</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-slate-400" />
-                </div>
+                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all font-medium"
+                  className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                   placeholder="Masukkan username"
                   required
                 />
@@ -98,16 +83,14 @@ export const Login: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Password</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Password</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-slate-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all font-medium"
+                  className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all"
                   placeholder="Masukkan password"
                   required
                 />
@@ -117,12 +100,19 @@ export const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
+              {isLoading ? (
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <LogIn size={16} />
+              )}
               {isLoading ? 'Memproses...' : 'Masuk'}
             </button>
           </form>
         </div>
+
+        <p className="text-center text-slate-500 text-xs mt-6">&copy; {new Date().getFullYear()} SiKecil</p>
       </div>
     </div>
   );

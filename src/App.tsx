@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NakesProvider } from './context/NakesContext';
+import { ToastProvider } from './components/Toast';
 import AppLegacy from './App.legacy';
 
 // Layout & Guards
@@ -39,6 +40,7 @@ import { OrtuDashboard } from './pages/ortu';
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
@@ -88,6 +90,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

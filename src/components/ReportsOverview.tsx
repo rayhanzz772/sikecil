@@ -10,7 +10,7 @@ export const ReportsOverview: React.FC = () => {
   const [posyanduActivity, setPosyanduActivity] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'ringkasan' | 'detail' | 'berisiko' | 'aktivitas'>('ringkasan');
-  
+
   const [selectedChildGrowth, setSelectedChildGrowth] = useState<any>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
 
@@ -19,7 +19,7 @@ export const ReportsOverview: React.FC = () => {
     month: currentDate.getMonth() + 1,
     year: currentDate.getFullYear()
   });
-  
+
   const [search, setSearch] = useState('');
 
   const [page, setPage] = useState(1);
@@ -38,11 +38,11 @@ export const ReportsOverview: React.FC = () => {
 
       setMeasurements(measRes?.data || measRes || []);
       setSummary(sumRes?.data || sumRes);
-      
+
       // Handle at risk data which is inside data.at_risk
       const riskPayload = riskRes?.data || riskRes;
       setAtRiskData(riskPayload?.at_risk || []);
-      
+
       setPosyanduActivity(actRes?.data || actRes || []);
 
       // We'll use the same page state for both paginated endpoints for simplicity,
@@ -146,8 +146,8 @@ export const ReportsOverview: React.FC = () => {
 
           <div className="ml-auto hidden sm:flex items-center border border-slate-200 bg-slate-50 rounded-lg px-3 py-1.5 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all">
             <Search size={16} className="text-slate-400 mr-2" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder={activeTab === 'aktivitas' ? "Cari Posyandu..." : "Cari Anak..."}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -155,12 +155,12 @@ export const ReportsOverview: React.FC = () => {
             />
           </div>
         </div>
-        
+
         {/* Mobile Search - shown below filters on small screens */}
         <div className="sm:hidden flex items-center border border-slate-200 bg-white shadow-sm rounded-xl px-3 py-2.5 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 transition-all w-full">
           <Search size={18} className="text-slate-400 mr-2" />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder={activeTab === 'aktivitas' ? "Cari Posyandu..." : "Cari Anak..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -178,33 +178,29 @@ export const ReportsOverview: React.FC = () => {
           <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl w-max mb-6 gap-1">
             <button
               onClick={() => { setActiveTab('ringkasan'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === 'ringkasan' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'ringkasan' ? 'bg-white shadow-sm text-black' : 'text-slate-500 hover:text-slate-700'
+                }`}
             >
               Ringkasan Status Gizi
             </button>
             <button
               onClick={() => { setActiveTab('detail'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === 'detail' ? 'bg-white shadow-sm text-indigo-700' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'detail' ? 'bg-white shadow-sm text-black' : 'text-slate-500 hover:text-slate-700'
+                }`}
             >
               Detail Pengukuran
             </button>
             <button
               onClick={() => { setActiveTab('berisiko'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === 'berisiko' ? 'bg-white shadow-sm text-rose-700' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'berisiko' ? 'bg-white shadow-sm text-rose-700' : 'text-slate-500 hover:text-slate-700'
+                }`}
             >
               Anak Berisiko
             </button>
             <button
               onClick={() => { setActiveTab('aktivitas'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${
-                activeTab === 'aktivitas' ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-700'
-              }`}
+              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'aktivitas' ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-700'
+                }`}
             >
               Aktivitas Posyandu
             </button>
@@ -268,83 +264,82 @@ export const ReportsOverview: React.FC = () => {
 
           {/* MEASUREMENTS DETAIL TABLE */}
           {activeTab === 'detail' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-              <div className="bg-sky-50/50 px-5 py-4 border-b border-slate-200 flex items-center gap-2">
-                <Search size={18} className="text-sky-600" />
-                <h2 className="font-bold text-slate-800">Detail Pengukuran</h2>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+              <div className="bg-sky-50/50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                <Search size={16} className="text-sky-600" />
+                <h2 className="font-bold text-slate-800 text-sm">Detail Pengukuran</h2>
               </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[900px]">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider w-16 text-center">No</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Nama Anak</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Tanggal Ukur</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Usia (Bln)</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Tinggi (cm)</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Berat (kg)</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Status HAZ</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Status WAZ</th>
-                    <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Status HCAZ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {measurements.length > 0 ? (
-                    measurements.map((m: any, index: number) => (
-                      <tr key={m.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="p-4 text-center text-sm text-slate-500 font-medium">
-                          {(page - 1) * perPage + index + 1}
-                        </td>
-                        <td className="p-4">
-                          <button onClick={() => handleViewChild(m.child?.id)} className="text-left group">
-                            <p className="font-bold text-sky-600 group-hover:text-sky-700 group-hover:underline text-sm">{m.child?.name || 'N/A'}</p>
-                            <p className="text-xs text-slate-500">{m.child?.user?.posyandu?.name || '-'}</p>
-                          </button>
-                        </td>
-                        <td className="p-4 text-slate-600 text-sm">
-                          {new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </td>
-                        <td className="p-4 text-slate-700 text-sm font-medium">{m.age_months}</td>
-                        <td className="p-4 text-slate-700 text-sm text-center font-mono bg-slate-50/50">{m.height}</td>
-                        <td className="p-4 text-slate-700 text-sm text-center font-mono bg-slate-50/50">{m.weight}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${m.status_haz?.toLowerCase().includes('stunting')
-                            ? 'bg-rose-100 text-rose-700'
-                            : 'bg-emerald-100 text-emerald-700'
-                            }`}>
-                            {m.status_haz || '-'}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${m.status_waz?.toLowerCase().includes('underweight')
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-emerald-100 text-emerald-700'
-                            }`}>
-                            {m.status_waz || '-'}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                            (m.status_hcaz?.toLowerCase().includes('mikro') || m.status_hcaz?.toLowerCase().includes('makro'))
-                            ? 'bg-rose-100 text-rose-700'
-                            : 'bg-emerald-100 text-emerald-700'
-                            }`}>
-                            {m.status_hcaz || '-'}
-                          </span>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm" style={{ minWidth: '900px' }}>
+                  <thead>
+                    <tr className="border-b border-slate-200 bg-slate-50/80">
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 w-12 text-center">No</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Anak</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Tanggal Ukur</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Usia (Bln)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-center">Tinggi (cm)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-center">Berat (kg)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Status HAZ</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Status WAZ</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Status HCAZ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {measurements.length > 0 ? (
+                      measurements.map((m: any, index: number) => (
+                        <tr key={m.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="px-3 py-2 text-center text-slate-500 font-medium">
+                            {(page - 1) * perPage + index + 1}
+                          </td>
+                          <td className="px-3 py-2">
+                            <button onClick={() => handleViewChild(m.child?.id)} className="text-left group">
+                              <p className="font-semibold text-sky-600 group-hover:text-sky-700 group-hover:underline">{m.child?.name || 'N/A'}</p>
+                              <p className="text-[11px] text-slate-400">{m.child?.user?.posyandu?.name || '-'}</p>
+                            </button>
+                          </td>
+                          <td className="px-3 py-2 text-slate-600">
+                            {new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="px-3 py-2 text-slate-700 font-medium">{m.age_months}</td>
+                          <td className="px-3 py-2 text-slate-700 text-center font-mono">{m.height}</td>
+                          <td className="px-3 py-2 text-slate-700 text-center font-mono">{m.weight}</td>
+                          <td className="px-3 py-2">
+                            <span className={`px-1.5 py-0.5 text-[11px] font-bold rounded ${m.status_haz?.toLowerCase().includes('stunting')
+                              ? 'bg-rose-100 text-rose-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                              {m.status_haz || '-'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={`px-1.5 py-0.5 text-[11px] font-bold rounded ${m.status_waz?.toLowerCase().includes('underweight')
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                              {m.status_waz || '-'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={`px-1.5 py-0.5 text-[11px] font-bold rounded ${(m.status_hcaz?.toLowerCase().includes('mikro') || m.status_hcaz?.toLowerCase().includes('makro'))
+                              ? 'bg-rose-100 text-rose-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                              }`}>
+                              {m.status_hcaz || '-'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={9} className="py-8 text-center text-slate-400 text-sm">
+                          Tidak ada data pengukuran untuk filter ini.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-500 text-sm">
-                        Tidak ada data pengukuran untuk filter ini.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {measurements.length > 0 && totalPages > 1 && (
                 <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
@@ -354,48 +349,48 @@ export const ReportsOverview: React.FC = () => {
 
           {/* ANAK BERISIKO TABLE */}
           {activeTab === 'berisiko' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-              <div className="bg-rose-50/50 px-5 py-4 border-b border-slate-200 flex items-center gap-2">
-                <Activity size={18} className="text-rose-600" />
-                <h2 className="font-bold text-slate-800">Daftar Anak Berisiko</h2>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+              <div className="bg-rose-50/50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                <Activity size={16} className="text-rose-600" />
+                <h2 className="font-bold text-slate-800 text-sm">Daftar Anak Berisiko</h2>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[900px]">
+                <table className="w-full text-left text-sm" style={{ minWidth: '800px' }}>
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider w-16 text-center">No</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Nama Anak</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Tgl Ukur</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Usia (Bln)</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">TB (cm)</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">BB (kg)</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Risiko / Indikasi</th>
+                    <tr className="border-b border-slate-200 bg-slate-50/80">
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 w-12 text-center">No</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Anak</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Tgl Ukur</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Usia (Bln)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-center">TB (cm)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 text-center">BB (kg)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Risiko / Indikasi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {atRiskData.length > 0 ? (
                       atRiskData.map((riskItem: any, index: number) => (
-                        <tr key={riskItem.child?.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-4 text-center text-sm text-slate-500 font-medium">
+                        <tr key={riskItem.child?.id} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="px-3 py-2 text-center text-slate-500">
                             {(page - 1) * perPage + index + 1}
                           </td>
-                          <td className="p-4">
+                          <td className="px-3 py-2">
                             <button onClick={() => handleViewChild(riskItem.child?.id)} className="text-left group">
-                              <p className="font-bold text-sky-600 group-hover:text-sky-700 group-hover:underline text-sm">{riskItem.child?.name || 'N/A'}</p>
-                              <p className="text-xs text-slate-500">{riskItem.child?.posyandu?.name || '-'}</p>
+                              <p className="font-semibold text-sky-600 group-hover:text-sky-700 group-hover:underline">{riskItem.child?.name || 'N/A'}</p>
+                              <p className="text-[11px] text-slate-400">{riskItem.child?.posyandu?.name || '-'}</p>
                             </button>
                           </td>
-                          <td className="p-4 text-slate-600 text-sm">
+                          <td className="px-3 py-2 text-slate-600">
                             {riskItem.latest_measurement?.date ? new Date(riskItem.latest_measurement.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                           </td>
-                          <td className="p-4 text-slate-700 text-sm font-medium">{riskItem.latest_measurement?.age_months ?? '-'}</td>
-                          <td className="p-4 text-slate-700 text-sm text-center font-mono bg-slate-50/50">{riskItem.latest_measurement?.height ?? '-'}</td>
-                          <td className="p-4 text-slate-700 text-sm text-center font-mono bg-slate-50/50">{riskItem.latest_measurement?.weight ?? '-'}</td>
-                          <td className="p-4">
+                          <td className="px-3 py-2 text-slate-700 font-medium">{riskItem.latest_measurement?.age_months ?? '-'}</td>
+                          <td className="px-3 py-2 text-slate-700 text-center font-mono">{riskItem.latest_measurement?.height ?? '-'}</td>
+                          <td className="px-3 py-2 text-slate-700 text-center font-mono">{riskItem.latest_measurement?.weight ?? '-'}</td>
+                          <td className="px-3 py-2">
                             <div className="flex flex-wrap gap-1">
                               {riskItem.risks?.map((r: any, idx: number) => (
-                                <span key={idx} className="px-2 py-1 text-[11px] font-bold rounded-md bg-rose-100 text-rose-700">
+                                <span key={idx} className="px-1.5 py-0.5 text-[11px] font-bold rounded bg-rose-100 text-rose-700">
                                   {r.status}
                                 </span>
                               ))}
@@ -408,7 +403,7 @@ export const ReportsOverview: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-slate-500 text-sm">
+                        <td colSpan={7} className="py-8 text-center text-slate-400 text-sm">
                           Tidak ada anak berisiko untuk filter ini.
                         </td>
                       </tr>
@@ -425,54 +420,52 @@ export const ReportsOverview: React.FC = () => {
 
           {/* POSYANDU ACTIVITY TABLE */}
           {activeTab === 'aktivitas' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-              <div className="bg-emerald-50/50 px-5 py-4 border-b border-slate-200 flex items-center gap-2">
-                <FileText size={18} className="text-emerald-600" />
-                <h2 className="font-bold text-slate-800">Aktivitas & Cakupan Posyandu</h2>
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+              <div className="bg-emerald-50/50 px-4 py-3 border-b border-slate-200 flex items-center gap-2">
+                <FileText size={16} className="text-emerald-600" />
+                <h2 className="font-bold text-slate-800 text-sm">Aktivitas & Cakupan Posyandu</h2>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[700px]">
+                <table className="w-full text-left border-collapse min-w-[600px]">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider w-16 text-center">No</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider">Nama Posyandu</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Total Anak</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Total Pengukuran</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Selesai Diukur</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Belum Diukur</th>
-                      <th className="p-4 font-bold text-slate-600 text-[13px] uppercase tracking-wider text-center">Cakupan (%)</th>
+                    <tr className="bg-slate-50/80 border-b border-slate-200">
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 w-12 text-center">No</th>
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nama Posyandu</th>
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 text-center">Total Anak</th>
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 text-center">Total Pengukuran</th>
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 text-center">Selesai Diukur</th>
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 text-center">Belum Diukur</th>
+                      <th className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500 text-center">Cakupan (%)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {posyanduActivity.length > 0 ? (
                       posyanduActivity.map((activity: any, index: number) => (
-                        <tr key={activity.posyandu?.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="p-4 text-center text-sm text-slate-500 font-medium">
+                        <tr key={activity.posyandu?.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="px-3 py-2 text-center text-xs text-slate-500 font-medium">
                             {index + 1}
                           </td>
-                          <td className="p-4">
-                            <p className="font-bold text-slate-800 text-sm">{activity.posyandu?.name || 'N/A'}</p>
-                            <p className="text-xs text-slate-500">{activity.posyandu?.desa?.name || '-'}</p>
+                          <td className="px-3 py-2">
+                            <p className="font-semibold text-slate-800 text-sm">{activity.posyandu?.name || 'N/A'}</p>
+                            <p className="text-[11px] text-slate-400">{activity.posyandu?.desa?.name || '-'}</p>
                           </td>
-                          <td className="p-4 text-slate-700 text-sm text-center font-medium">{activity.total_children}</td>
-                          <td className="p-4 text-slate-700 text-sm text-center font-medium">{activity.total_measurements}</td>
-                          <td className="p-4 text-emerald-600 text-sm text-center font-bold bg-emerald-50/50">{activity.children_measured}</td>
-                          <td className="p-4 text-amber-600 text-sm text-center font-bold bg-amber-50/50">{activity.children_not_measured}</td>
-                          <td className="p-4 text-center">
+                          <td className="px-3 py-2 text-slate-700 text-xs text-center font-medium">{activity.total_children}</td>
+                          <td className="px-3 py-2 text-slate-700 text-xs text-center font-medium">{activity.total_measurements}</td>
+                          <td className="px-3 py-2 text-emerald-600 text-xs text-center font-semibold">{activity.children_measured}</td>
+                          <td className="px-3 py-2 text-amber-600 text-xs text-center font-semibold">{activity.children_not_measured}</td>
+                          <td className="px-3 py-2 text-center">
                             <div className="flex items-center justify-center gap-2">
-                              <span className={`text-sm font-bold ${
-                                activity.coverage_percentage >= 80 ? 'text-emerald-600' :
+                              <span className={`text-xs font-semibold ${activity.coverage_percentage >= 80 ? 'text-emerald-600' :
                                 activity.coverage_percentage >= 50 ? 'text-amber-600' : 'text-rose-600'
-                              }`}>
+                                }`}>
                                 {activity.coverage_percentage}%
                               </span>
-                              <div className="w-16 h-2 rounded-full bg-slate-100 overflow-hidden hidden sm:block">
-                                <div 
-                                  className={`h-full rounded-full ${
-                                    activity.coverage_percentage >= 80 ? 'bg-emerald-500' :
+                              <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden hidden sm:block">
+                                <div
+                                  className={`h-full rounded-full ${activity.coverage_percentage >= 80 ? 'bg-emerald-500' :
                                     activity.coverage_percentage >= 50 ? 'bg-amber-500' : 'bg-rose-500'
-                                  }`}
+                                    }`}
                                   style={{ width: `${Math.min(activity.coverage_percentage, 100)}%` }}
                                 />
                               </div>
@@ -482,7 +475,7 @@ export const ReportsOverview: React.FC = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-slate-500 text-sm">
+                        <td colSpan={7} className="px-3 py-6 text-center text-slate-500 text-xs">
                           Tidak ada data aktivitas untuk filter ini.
                         </td>
                       </tr>
@@ -506,8 +499,8 @@ export const ReportsOverview: React.FC = () => {
                 </h2>
                 {selectedChildGrowth?.child && (
                   <p className="text-sm text-slate-500 mt-1">
-                    Lahir: {new Date(selectedChildGrowth.child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} • 
-                    Gender: {selectedChildGrowth.child.gender === 'L' ? 'Laki-laki' : 'Perempuan'} • 
+                    Lahir: {new Date(selectedChildGrowth.child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} •
+                    Gender: {selectedChildGrowth.child.gender === 'L' ? 'Laki-laki' : 'Perempuan'} •
                     Ortu: {selectedChildGrowth.child.parent?.name || '-'}
                   </p>
                 )}
@@ -527,45 +520,42 @@ export const ReportsOverview: React.FC = () => {
                   {/* Measurements */}
                   <div>
                     <h3 className="font-bold text-slate-800 text-sm mb-3">Riwayat Pengukuran Aktual</h3>
-                    <div className="border border-slate-200 rounded-xl overflow-hidden overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-slate-50 border-b border-slate-200">
+                    <div className="border border-slate-200 rounded-lg overflow-hidden overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50/80 border-b border-slate-200">
                           <tr>
-                            <th className="p-3 font-bold text-slate-600">Tanggal</th>
-                            <th className="p-3 font-bold text-slate-600">Usia (Bln)</th>
-                            <th className="p-3 font-bold text-slate-600">Tinggi (cm)</th>
-                            <th className="p-3 font-bold text-slate-600">Berat (kg)</th>
-                            <th className="p-3 font-bold text-slate-600">L. Kepala (cm)</th>
-                            <th className="p-3 font-bold text-slate-600">Status HAZ</th>
-                            <th className="p-3 font-bold text-slate-600">Status WAZ</th>
-                            <th className="p-3 font-bold text-slate-600">Status HCAZ</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">Tanggal</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">Usia</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">TB (cm)</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">BB (kg)</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">LK (cm)</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">HAZ</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">WAZ</th>
+                            <th className="px-2.5 py-2 font-semibold text-slate-500 uppercase tracking-wide text-[10px]">HCAZ</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {selectedChildGrowth?.measurements?.length > 0 ? (
                             selectedChildGrowth.measurements.map((m: any) => (
-                              <tr key={m.id} className="hover:bg-slate-50">
-                                <td className="p-3">{new Date(m.date).toLocaleDateString('id-ID')}</td>
-                                <td className="p-3 font-medium">{m.age_months}</td>
-                                <td className="p-3">{m.height}</td>
-                                <td className="p-3">{m.weight}</td>
-                                <td className="p-3">{m.head_circ || '-'}</td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                                    m.status_haz?.toLowerCase().includes('stunting') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
-                                  }`}>{m.status_haz || '-'}</span>
+                              <tr key={m.id} className="hover:bg-slate-50/60">
+                                <td className="px-2.5 py-1.5 text-slate-600">{new Date(m.date).toLocaleDateString('id-ID')}</td>
+                                <td className="px-2.5 py-1.5 font-medium text-slate-700">{m.age_months}</td>
+                                <td className="px-2.5 py-1.5 text-slate-600">{m.height}</td>
+                                <td className="px-2.5 py-1.5 text-slate-600">{m.weight}</td>
+                                <td className="px-2.5 py-1.5 text-slate-600">{m.head_circ || '-'}</td>
+                                <td className="px-2.5 py-1.5">
+                                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${m.status_haz?.toLowerCase().includes('stunting') ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                                    }`}>{m.status_haz || '-'}</span>
                                 </td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                                    m.status_waz?.toLowerCase().includes('underweight') ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                                  }`}>{m.status_waz || '-'}</span>
+                                <td className="px-2.5 py-1.5">
+                                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${m.status_waz?.toLowerCase().includes('underweight') ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                                    }`}>{m.status_waz || '-'}</span>
                                 </td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                                    (m.status_hcaz?.toLowerCase().includes('mikro') || m.status_hcaz?.toLowerCase().includes('makro')) 
-                                      ? 'bg-rose-100 text-rose-700' 
-                                      : 'bg-emerald-100 text-emerald-700'
-                                  }`}>{m.status_hcaz || '-'}</span>
+                                <td className="px-2.5 py-1.5">
+                                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${(m.status_hcaz?.toLowerCase().includes('mikro') || m.status_hcaz?.toLowerCase().includes('makro'))
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                    }`}>{m.status_hcaz || '-'}</span>
                                 </td>
                               </tr>
                             ))
@@ -581,46 +571,43 @@ export const ReportsOverview: React.FC = () => {
                   {selectedChildGrowth?.latest_prediction?.prediction && (
                     <div>
                       <h3 className="font-bold text-slate-800 text-sm mb-3">Prediksi Pertumbuhan (AI - {selectedChildGrowth.latest_prediction.selected_model})</h3>
-                      <div className="border border-indigo-100 rounded-xl overflow-hidden overflow-x-auto shadow-sm shadow-indigo-100/50">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-indigo-50 border-b border-indigo-100">
+                      <div className="border border-indigo-100 rounded-lg overflow-hidden overflow-x-auto shadow-sm shadow-indigo-100/50">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-indigo-50/80 border-b border-indigo-100">
                             <tr>
-                              <th className="p-3 font-bold text-indigo-900">Usia (Bln)</th>
-                              <th className="p-3 font-bold text-indigo-900">Est. Tinggi (cm)</th>
-                              <th className="p-3 font-bold text-indigo-900">Est. Berat (kg)</th>
-                              <th className="p-3 font-bold text-indigo-900">Est. L. Kepala (cm)</th>
-                              <th className="p-3 font-bold text-indigo-900">Risiko TB</th>
-                              <th className="p-3 font-bold text-indigo-900">Risiko BB</th>
-                              <th className="p-3 font-bold text-indigo-900">Risiko LK</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Usia</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Est. TB</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Est. BB</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Est. LK</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Risiko TB</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Risiko BB</th>
+                              <th className="px-2.5 py-2 font-semibold text-indigo-800 text-[10px] uppercase tracking-wide">Risiko LK</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-indigo-50">
                             {selectedChildGrowth.latest_prediction.prediction.map((p: any, idx: number) => (
-                              <tr key={idx} className="hover:bg-indigo-50/50">
-                                <td className="p-3 font-medium text-indigo-700">{p.age}</td>
-                                <td className="p-3">{p.height?.value?.toFixed(1) || '-'} <span className="text-xs text-slate-400">±{p.height?.uncertainty_band?.toFixed(1) || 0}</span></td>
-                                <td className="p-3">{p.weight?.value?.toFixed(1) || '-'} <span className="text-xs text-slate-400">±{p.weight?.uncertainty_band?.toFixed(1) || 0}</span></td>
-                                <td className="p-3">{p.head_circ?.value?.toFixed(1) || '-'}</td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                                    (p.height?.status || '').toLowerCase().includes('risk') || (p.height?.status || '').toLowerCase().includes('stunting') 
-                                      ? 'bg-rose-100 text-rose-700' 
-                                      : 'bg-emerald-100 text-emerald-700'
-                                  }`}>{p.height?.status || '-'}</span>
+                              <tr key={idx} className="hover:bg-indigo-50/40">
+                                <td className="px-2.5 py-1.5 font-medium text-indigo-700">{p.age}</td>
+                                <td className="px-2.5 py-1.5 text-slate-600">{p.height?.value?.toFixed(1) || '-'} <span className="text-[10px] text-slate-400">±{p.height?.uncertainty_band?.toFixed(1) || 0}</span></td>
+                                <td className="px-2.5 py-1.5 text-slate-600">{p.weight?.value?.toFixed(1) || '-'} <span className="text-[10px] text-slate-400">±{p.weight?.uncertainty_band?.toFixed(1) || 0}</span></td>
+                                <td className="px-2.5 py-1.5 text-slate-600">{p.head_circ?.value?.toFixed(1) || '-'}</td>
+                                <td className="px-2.5 py-1.5">
+                                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${(p.height?.status || '').toLowerCase().includes('risk') || (p.height?.status || '').toLowerCase().includes('stunting')
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                    }`}>{p.height?.status || '-'}</span>
                                 </td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                                    (p.weight?.status || '').toLowerCase().includes('buruk') || (p.weight?.status || '').toLowerCase().includes('kurang') 
-                                      ? 'bg-amber-100 text-amber-700' 
-                                      : 'bg-emerald-100 text-emerald-700'
-                                  }`}>{p.weight?.status || '-'}</span>
+                                <td className="px-2.5 py-1.5">
+                                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${(p.weight?.status || '').toLowerCase().includes('buruk') || (p.weight?.status || '').toLowerCase().includes('kurang')
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                    }`}>{p.weight?.status || '-'}</span>
                                 </td>
-                                <td className="p-3">
-                                  <span className={`px-2 py-1 text-[11px] font-bold rounded-md ${
-                                    (p.head_circ?.status || '').toLowerCase().includes('mikro') || (p.head_circ?.status || '').toLowerCase().includes('makro') 
-                                      ? 'bg-rose-100 text-rose-700' 
-                                      : 'bg-emerald-100 text-emerald-700'
-                                  }`}>{p.head_circ?.status || '-'}</span>
+                                <td className="px-2.5 py-1.5">
+                                  <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${(p.head_circ?.status || '').toLowerCase().includes('mikro') || (p.head_circ?.status || '').toLowerCase().includes('makro')
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-emerald-100 text-emerald-700'
+                                    }`}>{p.head_circ?.status || '-'}</span>
                                 </td>
                               </tr>
                             ))}
@@ -633,7 +620,7 @@ export const ReportsOverview: React.FC = () => {
                 </>
               )}
             </div>
-            
+
             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end rounded-b-2xl">
               <button
                 onClick={closeModal}

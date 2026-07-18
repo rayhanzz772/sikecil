@@ -7,15 +7,18 @@ import { childService } from '../../services/childService';
 import { measurementService } from '../../services/measurementService';
 import { predictionService } from '../../services/predictionService';
 import { PredictionResponse } from '../../types';
+import { useToast } from '../../components/Toast';
 
 export const ChildDetail: React.FC = () => {
   const { childId } = useParams<{ childId: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
   const [child, setChild] = useState<any>(null);
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'height' | 'weight' | 'head'>('height');
+  const [timeRange, setTimeRange] = useState<'0-13w' | '0-24m' | '0-60m'>('0-24m');
 
   const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
@@ -66,7 +69,7 @@ export const ChildDetail: React.FC = () => {
       setMeasurements(formattedMeasurements);
     } catch (error) {
       console.error('Failed to fetch child detail:', error);
-      alert('Gagal mengambil data anak.');
+      toast.error('Gagal mengambil data anak.');
     } finally {
       setIsLoading(false);
     }
@@ -107,7 +110,7 @@ export const ChildDetail: React.FC = () => {
   const handleGeneratePrediction = async () => {
     if (!childId) return;
     if (measurements.length < 3) {
-      alert('Butuh minimal 3 data pengukuran untuk prediksi AI');
+      toast.info('Butuh minimal 3 data pengukuran untuk prediksi AI');
       return;
     }
     setIsPredicting(true);
@@ -135,7 +138,7 @@ export const ChildDetail: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Failed to generate prediction:', error);
-      alert(error?.response?.data?.message || 'Gagal memproses prediksi AI');
+      toast.error(error?.response?.data?.message || 'Gagal memproses prediksi AI');
     } finally {
       setIsPredicting(false);
     }
@@ -166,9 +169,10 @@ export const ChildDetail: React.FC = () => {
         notes: ''
       });
       fetchData(); // Refresh data
+      toast.success('Pengukuran berhasil disimpan.');
     } catch (error) {
       console.error('Failed to create measurement:', error);
-      alert('Gagal menyimpan pengukuran.');
+      toast.error('Gagal menyimpan pengukuran.');
     }
   };
 
@@ -193,74 +197,74 @@ export const ChildDetail: React.FC = () => {
   const headStatus = latestMeasurement ? getHeadCircumferenceStatus(latestMeasurement.headCircumference, latestMeasurement.ageMonths, child.gender, latestMeasurement.hcaz, latestMeasurement.status_hcaz) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 bg-white text-slate-600 rounded-xl border border-slate-200 hover:bg-slate-50 shadow-sm"
+          className="p-1.5 bg-white text-slate-600 rounded-lg border border-slate-200 hover:bg-slate-50"
         >
-          <ArrowLeft size={20} />
+          <ArrowLeft size={18} />
         </button>
-        <h1 className="text-2xl font-extrabold text-slate-800">Detail Anak</h1>
+        <h1 className="text-lg font-bold text-slate-800">Detail Anak</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Profile Card */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-1">
-          <div className="flex items-center gap-4 mb-6">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-sm ${child.gender === 'L' ? 'bg-sky-500' : 'bg-pink-500'}`}>
+        <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200 lg:col-span-1">
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white text-lg font-bold ${child.gender === 'L' ? 'bg-sky-500' : 'bg-pink-500'}`}>
               {child.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">{child.name}</h2>
-              <p className="text-sm font-semibold text-slate-500">{child.gender}</p>
+              <h2 className="text-base font-bold text-slate-800">{child.name}</h2>
+              <p className="text-xs text-slate-500">{child.gender}</p>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-slate-500 text-sm">NIK</span>
-              <span className="font-bold text-slate-700 font-mono text-sm">{child.nik || '-'}</span>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              <span className="text-slate-500 text-xs">NIK</span>
+              <span className="font-medium text-slate-700 font-mono text-xs">{child.nik || '-'}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-slate-500 text-sm">Tanggal Lahir</span>
-              <span className="font-bold text-slate-700 text-sm">{new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              <span className="text-slate-500 text-xs">Tanggal Lahir</span>
+              <span className="font-medium text-slate-700 text-xs">{new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-slate-500 text-sm">Orang Tua / Wali</span>
-              <span className="font-bold text-slate-700 text-sm">{child.user.name || '-'}</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              <span className="text-slate-500 text-xs">Orang Tua / Wali</span>
+              <span className="font-medium text-slate-700 text-xs">{child.user.name || '-'}</span>
             </div>
-            <div className="flex justify-between items-center py-2 border-b border-slate-100">
-              <span className="text-slate-500 text-sm">Posyandu</span>
-              <span className="font-bold text-slate-700 text-sm">{child.user.posyandu.name || '-'}</span>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-100">
+              <span className="text-slate-500 text-xs">Posyandu</span>
+              <span className="font-medium text-slate-700 text-xs">{child.user.posyandu.name || '-'}</span>
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <h3 className="font-bold text-slate-700 mb-3 text-sm flex items-center gap-2">
-              <Activity size={16} className="text-sky-600" />
+          <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+            <h3 className="font-semibold text-slate-700 mb-2 text-xs flex items-center gap-1.5">
+              <Activity size={14} className="text-sky-600" />
               Status Gizi Terakhir
             </h3>
             {latestMeasurement ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">Tinggi/Panjang</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${stuntingStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${stuntingStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                     }`}>
                     {stuntingStatus?.status || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">Berat Badan</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${weightStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${weightStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                     }`}>
                     {weightStatus?.status || 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-slate-500">Lingkar Kepala</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-md ${headStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${headStatus?.status === 'Normal' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                     }`}>
                     {headStatus?.status || 'N/A'}
                   </span>
@@ -273,42 +277,66 @@ export const ChildDetail: React.FC = () => {
         </div>
 
         {/* Chart and Measurements */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-slate-800">Grafik Pertumbuhan</h2>
+        <div className="lg:col-span-2 space-y-4">
+          <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-800">Grafik Pertumbuhan</h2>
                 <button
                   onClick={handleGeneratePrediction}
                   disabled={isPredicting || measurements.length < 3}
-                  className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 transition-colors"
+                  className="px-2.5 py-1 bg-indigo-600 text-white text-[11px] font-semibold rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                 >
-                  <Sparkles size={14} />
+                  <Sparkles size={12} />
                   {isPredicting ? 'Memproses...' : 'Prediksi AI'}
                 </button>
                 {predictionStale && predictions && (
-                  <span className="text-xs text-amber-600 font-medium">Data baru tersedia, perbarui prediksi</span>
+                  <span className="text-[10px] text-amber-600 font-medium">Data baru tersedia</span>
                 )}
               </div>
-              <div className="flex bg-slate-100 p-1 rounded-xl">
-                <button
-                  onClick={() => setActiveTab('height')}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${activeTab === 'height' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Tinggi
-                </button>
-                <button
-                  onClick={() => setActiveTab('weight')}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${activeTab === 'weight' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  Berat
-                </button>
-                <button
-                  onClick={() => setActiveTab('head')}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-bold transition-colors ${activeTab === 'head' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                >
-                  L. Kepala
-                </button>
+              <div className="flex gap-1.5 items-center">
+                {activeTab === 'head' && (
+                  <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                    <button
+                      onClick={() => setTimeRange('0-13w')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-semibold ${timeRange === '0-13w' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      0-13 Mgg
+                    </button>
+                    <button
+                      onClick={() => setTimeRange('0-24m')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-semibold ${timeRange === '0-24m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      0-2 Thn
+                    </button>
+                    <button
+                      onClick={() => setTimeRange('0-60m')}
+                      className={`px-2 py-1 rounded-md text-[11px] font-semibold ${timeRange === '0-60m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                    >
+                      0-5 Thn
+                    </button>
+                  </div>
+                )}
+                <div className="flex bg-slate-100 p-0.5 rounded-lg">
+                  <button
+                    onClick={() => setActiveTab('height')}
+                    className={`px-3 py-1 rounded-md text-xs font-semibold ${activeTab === 'height' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Tinggi
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('weight')}
+                    className={`px-3 py-1 rounded-md text-xs font-semibold ${activeTab === 'weight' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    Berat
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('head')}
+                    className={`px-3 py-1 rounded-md text-xs font-semibold ${activeTab === 'head' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
+                  >
+                    L. Kepala
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -316,48 +344,48 @@ export const ChildDetail: React.FC = () => {
               <GrowthChart
                 gender={child.gender}
                 measurements={measurements}
-                timeRange="0-24m"
+                timeRange={activeTab === 'head' ? timeRange : '0-24m'}
                 chartType={activeTab}
                 predictions={predictions?.prediction}
               />
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-800">Riwayat Pengukuran</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+              <h2 className="text-base font-bold text-slate-800">Riwayat Pengukuran</h2>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-sky-600 text-white px-3 py-1.5 rounded-xl text-sm font-bold hover:bg-sky-700 flex items-center gap-1"
+                className="bg-sky-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium hover:bg-sky-700 flex items-center gap-1"
               >
-                <Plus size={16} /> Catat
+                <Plus size={14} /> Catat
               </button>
             </div>
 
             <div className="overflow-x-auto">
               {measurements.length === 0 ? (
-                <div className="p-8 text-center text-slate-500">Belum ada data pengukuran.</div>
+                <div className="py-10 text-center text-sm text-slate-400">Belum ada data pengukuran.</div>
               ) : (
-                <table className="w-full text-left border-collapse min-w-[500px]">
+                <table className="w-full text-left text-sm min-w-[450px]">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-4 font-bold text-slate-600 text-sm">Tanggal</th>
-                      <th className="p-4 font-bold text-slate-600 text-sm">Usia (Bulan)</th>
-                      <th className="p-4 font-bold text-slate-600 text-sm">TB (cm)</th>
-                      <th className="p-4 font-bold text-slate-600 text-sm">BB (kg)</th>
-                      <th className="p-4 font-bold text-slate-600 text-sm">LK (cm)</th>
+                    <tr className="bg-slate-50/80 border-b border-slate-200">
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Tanggal</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">Usia (Bln)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">TB (cm)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">BB (kg)</th>
+                      <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">LK (cm)</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     {sortedMeasurements.map((m) => (
-                      <tr key={m.id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="p-4 text-slate-700 text-sm">
+                      <tr key={m.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="px-3 py-2 text-slate-600">
                           {new Date(m.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
-                        <td className="p-4 text-slate-700 text-sm font-bold">{m.ageMonths?.toFixed(1) || '-'}</td>
-                        <td className="p-4 text-slate-700 text-sm font-bold text-sky-700">{m.height}</td>
-                        <td className="p-4 text-slate-700 text-sm font-bold text-emerald-700">{m.weight}</td>
-                        <td className="p-4 text-slate-700 text-sm font-bold text-purple-700">{m.headCircumference || '-'}</td>
+                        <td className="px-3 py-2 text-slate-700 font-medium">{m.ageMonths?.toFixed(1) || '-'}</td>
+                        <td className="px-3 py-2 text-sky-700 font-medium">{m.height}</td>
+                        <td className="px-3 py-2 text-emerald-700 font-medium">{m.weight}</td>
+                        <td className="px-3 py-2 text-purple-700 font-medium">{m.headCircumference || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

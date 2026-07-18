@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 
 export const AppLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-white flex">
       <Sidebar />
       <main className="flex-1 ml-64 p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">

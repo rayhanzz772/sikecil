@@ -5,6 +5,7 @@ import { Plus, X, ArrowRight } from 'lucide-react';
 import { useNakes } from '../../context/NakesContext';
 import { DashboardOverview } from './DashboardOverview';
 import { ReportsOverview } from '../../components/ReportsOverview';
+import { useToast } from '../../components/Toast';
 
 export * from './ChildDetail';
 
@@ -18,6 +19,7 @@ export const NakesChildrenData: React.FC = () => {
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -89,142 +91,140 @@ export const NakesChildrenData: React.FC = () => {
         address: ''
       });
       fetchChildren();
+      toast.success('Data anak berhasil ditambahkan.');
     } catch (error) {
       console.error('Failed to create child:', error);
-      alert('Gagal menambahkan data anak.');
+      toast.error('Gagal menambahkan data anak.');
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-extrabold text-slate-800">Data Anak</h1>
+        <h1 className="text-lg font-bold text-slate-800">Data Anak</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-sky-600 text-white px-4 py-2 rounded-xl font-bold hover:bg-sky-700 flex items-center gap-2"
+          className="bg-sky-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-sky-700 flex items-center gap-1.5"
         >
-          <Plus size={18} /> Tambah Anak
+          <Plus size={15} /> Tambah Anak
         </button>
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <label className="block text-xs font-bold text-slate-500 mb-1">Pencarian</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="Cari nama atau NIK anak..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full sm:w-1/2 px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-          />
-        </div>
+      <div className="bg-white p-3 rounded-lg border border-slate-200">
+        <label className="block text-xs font-medium text-slate-500 mb-1">Pencarian</label>
+        <input
+          type="text"
+          placeholder="Cari nama atau NIK anak..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-1/2 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+        />
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Memuat data...</div>
+          <div className="py-8 text-center text-sm text-slate-400">Memuat data...</div>
         ) : childrenData.length === 0 ? (
-          <div className="p-8 text-center text-slate-500">Tidak ada data anak ditemukan.</div>
+          <div className="py-8 text-center text-sm text-slate-400">Tidak ada data anak ditemukan.</div>
         ) : (
-          <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="p-4 font-bold text-slate-600 text-sm w-16 text-center">No</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">NIK</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Nama Anak</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Jenis Kelamin</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Tanggal Lahir</th>
-                <th className="p-4 font-bold text-slate-600 text-sm">Orang Tua</th>
-                <th className="p-4 font-bold text-slate-600 text-sm w-32 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {childrenData.map((child, index) => (
-                <tr key={child.id} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="p-4 text-center text-sm text-slate-500 font-medium">
-                    {(page - 1) * perPage + index + 1}
-                  </td>
-                  <td className="p-4 text-slate-700 font-mono text-sm">{child.nik || '-'}</td>
-                  <td className="p-4 text-slate-800 font-bold">{child.name}</td>
-                  <td className="p-4 text-slate-600">
-                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${child.gender === 'L' || child.gender === 'Laki-laki' ? 'bg-sky-100 text-sky-700' : 'bg-pink-100 text-pink-700'}`}>
-                      {child.gender === 'L' || child.gender === 'Laki-laki' ? 'Laki-laki' : 'Perempuan'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-600">
-                    {child.birth_date ? new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                  </td>
-                  <td className="p-4 text-slate-600 text-sm">{child.user?.name || child.parent_name || '-'}</td>
-                  <td className="p-4 text-center">
-                    <button
-                      onClick={() => navigate(`/nakes/children/${child.id}`)}
-                      className="px-3 py-1.5 bg-slate-100 text-sky-700 font-bold rounded-lg hover:bg-sky-50 border border-slate-200 transition-colors text-sm flex items-center gap-1 mx-auto"
-                    >
-                      Detail
-                      <ArrowRight size={14} />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm min-w-[650px]">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-10 text-center">No</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">NIK</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Nama Anak</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">JK</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tgl Lahir</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Orang Tua</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 w-20 text-center">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {childrenData.map((child, index) => (
+                  <tr key={child.id} className="hover:bg-slate-50/60">
+                    <td className="px-3 py-1.5 text-center text-xs text-slate-500">
+                      {(page - 1) * perPage + index + 1}
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 font-mono text-xs">{child.nik || '-'}</td>
+                    <td className="px-3 py-1.5 text-slate-800 font-medium">{child.name}</td>
+                    <td className="px-3 py-1.5">
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${child.gender === 'L' || child.gender === 'Laki-laki' ? 'bg-sky-50 text-sky-700' : 'bg-pink-50 text-pink-700'}`}>
+                        {child.gender === 'L' || child.gender === 'Laki-laki' ? 'Laki-laki' : 'Perempuan'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 text-xs">
+                      {child.birth_date ? new Date(child.birth_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                    </td>
+                    <td className="px-3 py-1.5 text-slate-600 text-xs">{child.user?.name || child.parent_name || '-'}</td>
+                    <td className="px-3 py-1.5 text-center">
+                      <button
+                        onClick={() => navigate(`/nakes/children/${child.id}`)}
+                        className="px-2 py-1 text-sky-700 font-medium rounded hover:bg-sky-50 border border-slate-200 text-xs inline-flex items-center gap-1"
+                      >
+                        Detail
+                        <ArrowRight size={11} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-xl shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100 sticky top-0 bg-white z-10">
-              <h2 className="text-xl font-bold text-slate-800">Tambah Data Anak</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X size={20} />
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
+              <h2 className="text-base font-bold text-slate-800">Tambah Data Anak</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="p-5 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Nama Lengkap Anak</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Nama Lengkap Anak</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">NIK Anak</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">NIK Anak</label>
                   <input
                     type="text"
                     value={formData.nik}
                     onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Tanggal Lahir</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Tanggal Lahir</label>
                   <input
                     type="date"
                     required
                     value={formData.birth_date}
                     onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">Jenis Kelamin</label>
                   <select
                     required
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-white"
                   >
                     <option value="L">Laki-laki</option>
                     <option value="P">Perempuan</option>
@@ -232,46 +232,44 @@ export const NakesChildrenData: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Orang Tua / Wali</label>
-                  <select
-                    required
-                    value={formData.user_id}
-                    onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white"
-                  >
-                    <option value="" disabled>Pilih Orang Tua...</option>
-                    {parents.map((parent) => (
-                      <option key={parent.id} value={parent.id}>
-                        {parent.name} {parent.nik ? `(${parent.nik})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Alamat Lengkap</label>
-                  <textarea
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"
-                    rows={2}
-                    placeholder="Contoh: Jl. Merdeka No. 10, Bandung"
-                  ></textarea>
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Orang Tua / Wali</label>
+                <select
+                  required
+                  value={formData.user_id}
+                  onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none bg-white"
+                >
+                  <option value="" disabled>Pilih Orang Tua...</option>
+                  {parents.map((parent) => (
+                    <option key={parent.id} value={parent.id}>
+                      {parent.name} {parent.nik ? `(${parent.nik})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Alamat Lengkap</label>
+                <textarea
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none"
+                  rows={2}
+                  placeholder="Contoh: Jl. Merdeka No. 10, Bandung"
+                ></textarea>
               </div>
 
-              <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-5 py-2 text-slate-600 font-bold hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-3 py-1.5 text-sm text-slate-600 font-medium hover:bg-slate-100 rounded-lg"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-sky-600 text-white font-bold rounded-xl hover:bg-sky-700 transition-colors shadow-sm shadow-sky-600/20"
+                  className="px-3 py-1.5 text-sm bg-sky-600 text-white font-semibold rounded-lg hover:bg-sky-700"
                 >
                   Simpan
                 </button>
@@ -286,22 +284,21 @@ export const NakesChildrenData: React.FC = () => {
 
 export const MeasurementInput: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Input Pengukuran</h1>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p className="text-slate-600">Form untuk memasukkan data berat badan, tinggi badan, dan lingkar kepala anak.</p>
+    <div className="space-y-4">
+      <h1 className="text-lg font-bold text-slate-800">Input Pengukuran</h1>
+      <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+        <p className="text-sm text-slate-600">Form untuk memasukkan data berat badan, tinggi badan, dan lingkar kepala anak.</p>
       </div>
     </div>
   );
 };
 
 export const HistoryChart: React.FC = () => {
-  // Nanti akan memuat komponen GrowthChart.tsx
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Riwayat & Grafik Pertumbuhan</h1>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p className="text-slate-600">Grafik standar WHO (Z-Score) akan ditampilkan di sini.</p>
+    <div className="space-y-4">
+      <h1 className="text-lg font-bold text-slate-800">Riwayat & Grafik Pertumbuhan</h1>
+      <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+        <p className="text-sm text-slate-600">Grafik standar WHO (Z-Score) akan ditampilkan di sini.</p>
       </div>
     </div>
   );
@@ -309,10 +306,10 @@ export const HistoryChart: React.FC = () => {
 
 export const Prediction: React.FC = () => {
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-extrabold text-slate-800">Prediksi AI</h1>
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <p className="text-slate-600">Halaman untuk memprediksi potensi stunting menggunakan model GPR.</p>
+    <div className="space-y-4">
+      <h1 className="text-lg font-bold text-slate-800">Prediksi AI</h1>
+      <div className="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+        <p className="text-sm text-slate-600">Halaman untuk memprediksi potensi stunting menggunakan model GPR.</p>
       </div>
     </div>
   );

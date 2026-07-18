@@ -151,7 +151,7 @@ export default function App() {
 
   // UI state
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
-  const [timeRange, setTimeRange] = useState<string>('0-24m'); // 0-6m, 0-24m, 6-24m, 24-60m, 0-60m
+  const [timeRange, setTimeRange] = useState<string>('0-24m');
   const [isChildModalOpen, setIsChildModalOpen] = useState(false);
   const [isMeasureModalOpen, setIsMeasureModalOpen] = useState(false);
   const [editingChild, setEditingChild] = useState<Child | null>(null);
@@ -203,6 +203,16 @@ export default function App() {
   useEffect(() => {
     fetchMyChildren();
   }, [user]);
+
+  useEffect(() => {
+    const headOnly = ['0-13w'];
+    const nonHead = ['0-6m', '6-24m', '24-60m'];
+    if (activeChartTab === 'head' && nonHead.includes(timeRange)) {
+      setTimeRange('0-24m');
+    } else if (activeChartTab !== 'head' && headOnly.includes(timeRange)) {
+      setTimeRange('0-24m');
+    }
+  }, [activeChartTab]);
 
   const fetchMeasurementsForChild = async (childId: string, birthDateStr: string) => {
     try {
@@ -844,17 +854,29 @@ export default function App() {
 
                       {/* Select range dropdown */}
                       <div className="flex gap-2">
-                        <select
-                          value={timeRange}
-                          onChange={(e) => setTimeRange(e.target.value)}
-                          className={`bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 focus:${theme.ring} cursor-pointer uppercase tracking-wider`}
-                        >
-                          <option value="0-6m">0 - 6 Bulan (Mingguan)</option>
-                          <option value="0-24m">0 - 2 Tahun</option>
-                          <option value="6-24m">6 Bulan - 2 Tahun</option>
-                          <option value="24-60m">2 - 5 Tahun</option>
-                          <option value="0-60m">0 - 5 Tahun</option>
-                        </select>
+                        {activeChartTab === 'head' ? (
+                          <select
+                            value={timeRange}
+                            onChange={(e) => setTimeRange(e.target.value)}
+                            className={`bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 cursor-pointer uppercase tracking-wider`}
+                          >
+                            <option value="0-13w">0 - 13 Minggu</option>
+                            <option value="0-24m">0 - 2 Tahun</option>
+                            <option value="0-60m">0 - 5 Tahun</option>
+                          </select>
+                        ) : (
+                          <select
+                            value={timeRange}
+                            onChange={(e) => setTimeRange(e.target.value)}
+                            className={`bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 cursor-pointer uppercase tracking-wider`}
+                          >
+                            <option value="0-6m">0 - 6 Bulan (Mingguan)</option>
+                            <option value="0-24m">0 - 2 Tahun</option>
+                            <option value="6-24m">6 Bulan - 2 Tahun</option>
+                            <option value="24-60m">2 - 5 Tahun</option>
+                            <option value="0-60m">0 - 5 Tahun</option>
+                          </select>
+                        )}
                       </div>
                     </div>
 
@@ -890,7 +912,7 @@ export default function App() {
                     </div>
 
                     {/* The Actual Graph Component */}
-                    <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                    <div className="w-full overflow-hidden rounded-xl border border-slate-100 bg-slate-50/50 p-2.5">
                       <GrowthChart
                         gender={currentChild.gender}
                         measurements={currentMeasurements}
