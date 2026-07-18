@@ -119,8 +119,18 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
   const labelText = chartType === 'height' ? 'Tinggi Badan (cm)' : chartType === 'weight' ? 'Berat Badan (kg)' : 'Lingkar Kepala (cm)';
 
   const isGirl = gender === 'P' || gender === 'Perempuan';
+  
+  // Theme colors based on gender
   const childLineColor = isGirl ? '#ec4899' : '#0284c7';
   const childActiveDotColor = isGirl ? '#be185d' : '#0369a1';
+  
+  const bgClass = isGirl ? 'bg-pink-50/50' : 'bg-sky-50/50';
+  const gridColor = isGirl ? '#fbcfe8' : '#bae6fd';
+  const zoneNormalColor = isGirl ? '#fce7f3' : '#e0f2fe';
+  const medianLineColor = isGirl ? '#ec4899' : '#0ea5e9';
+  
+  const tooltipMedianText = isGirl ? 'text-pink-600' : 'text-sky-600';
+  const tooltipMedianDot = isGirl ? 'bg-pink-500' : 'bg-sky-500';
 
   const xTicks = useMemo(() => {
     if (timeRange === '0-13w') {
@@ -184,8 +194,8 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
             <p className="text-slate-500 text-xs border-t border-slate-50 pt-1 mt-1">
               Referensi WHO:
             </p>
-            <p className="text-emerald-600 flex items-center gap-1.5 text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <p className={`${tooltipMedianText} flex items-center gap-1.5 text-xs`}>
+              <span className={`w-2 h-2 rounded-full ${tooltipMedianDot}`}></span>
               Median (Ideal): {data.median} {unit}
             </p>
             <p className="text-amber-600 flex items-center gap-1.5 text-xs">
@@ -204,13 +214,13 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
   };
 
   return (
-    <div className="w-full h-[320px] md:h-[400px]" id="growth-chart-container">
+    <div className={`w-full h-[320px] md:h-[400px] rounded-xl p-1 md:p-2 ${bgClass}`} id="growth-chart-container">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={chartData}
           margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="#d8dde3ff" />
+          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke={gridColor} />
           <XAxis
             dataKey="month"
             type="number"
@@ -253,7 +263,7 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
           <Area
             type="linear"
             dataKey="sd2pos"
-            fill="#bbf7d0"
+            fill={zoneNormalColor}
             stroke="none"
             fillOpacity={0.4}
             legendType="none"
@@ -280,7 +290,7 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
           <Line
             type="linear"
             dataKey="median"
-            stroke="#10b981"
+            stroke={medianLineColor}
             strokeWidth={2}
             strokeDasharray="4 4"
             dot={false}
