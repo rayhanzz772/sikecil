@@ -36,7 +36,7 @@ export const GuestMeasurement: React.FC = () => {
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
   const [timeRange, setTimeRange] = useState<string>('0-24m');
   const [isProfileFormOpen, setIsProfileFormOpen] = useState(true);
-  
+
   // Temporary Form States
   const [profileForm, setProfileForm] = useState({
     name: '',
@@ -64,12 +64,12 @@ export const GuestMeasurement: React.FC = () => {
     if (!childProfile) return;
 
     const age = calculateAge(childProfile.birthDate, measureForm.date);
-    
+
     // Recalculate z-scores manually so we can save them in the measurement object
     const hStatus = getStuntingStatus(Number(measureForm.height), age.totalMonthsFloat, childProfile.gender);
     const wStatus = getWeightStatus(Number(measureForm.weight), age.totalMonthsFloat, childProfile.gender);
-    const hcStatus = measureForm.headCircumference 
-      ? getHeadCircumferenceStatus(Number(measureForm.headCircumference), age.totalMonthsFloat, childProfile.gender) 
+    const hcStatus = measureForm.headCircumference
+      ? getHeadCircumferenceStatus(Number(measureForm.headCircumference), age.totalMonthsFloat, childProfile.gender)
       : null;
 
     const newMeasurement: Measurement = {
@@ -169,7 +169,7 @@ export const GuestMeasurement: React.FC = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 md:px-6 py-6 flex-1 flex flex-col gap-6 w-full">
-        
+
         {/* Info Banner */}
         <div className="bg-sky-50 border border-sky-200 rounded-2xl p-4 flex gap-3 shadow-sm items-start">
           <Info className="text-sky-600 shrink-0 mt-0.5" size={18} />
@@ -192,7 +192,7 @@ export const GuestMeasurement: React.FC = () => {
                 <p className="text-xs text-slate-500">Masukkan profil dasar untuk memulai.</p>
               </div>
             </div>
-            
+
             <form onSubmit={handleSaveProfile} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Nama Panggilan (Opsional)</label>
@@ -249,10 +249,10 @@ export const GuestMeasurement: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            
+
             {/* Left/Center Column: Charts & Stats */}
             <div className="md:col-span-2 space-y-6 flex flex-col">
-              
+
               {/* Profile Card */}
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -285,11 +285,10 @@ export const GuestMeasurement: React.FC = () => {
                   {/* Card Height */}
                   <div
                     onClick={() => setActiveChartTab('height')}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${
-                      activeChartTab === 'height'
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'height'
                         ? `${theme.bgLight80} ${theme.border} ring-2 ${theme.ring10}`
                         : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex flex-col items-center gap-1">
                       <Ruler className={`w-4 h-4 ${activeChartTab === 'height' ? theme.text : 'text-slate-400'}`} />
@@ -308,11 +307,10 @@ export const GuestMeasurement: React.FC = () => {
                   {/* Card Weight */}
                   <div
                     onClick={() => setActiveChartTab('weight')}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${
-                      activeChartTab === 'weight'
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'weight'
                         ? `${theme.bgLight80} ${theme.border} ring-2 ${theme.ring10}`
                         : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex flex-col items-center gap-1">
                       <Scale className={`w-4 h-4 ${activeChartTab === 'weight' ? theme.text : 'text-slate-400'}`} />
@@ -331,11 +329,10 @@ export const GuestMeasurement: React.FC = () => {
                   {/* Card Head Circ */}
                   <div
                     onClick={() => setActiveChartTab('head')}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${
-                      activeChartTab === 'head'
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer text-center relative ${activeChartTab === 'head'
                         ? `${theme.bgLight80} ${theme.border} ring-2 ${theme.ring10}`
                         : 'bg-slate-50 border-slate-200 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex flex-col items-center gap-1">
                       <Activity className={`w-4 h-4 ${activeChartTab === 'head' ? theme.text : 'text-slate-400'}`} />
@@ -399,7 +396,7 @@ export const GuestMeasurement: React.FC = () => {
                           2 Thn
                         </button>
                         <button
-                          onClick={() => setTimeRange('24-60m')}
+                          onClick={() => setTimeRange('0-60m')}
                           className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '24-60m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                           5 Thn
@@ -474,12 +471,12 @@ export const GuestMeasurement: React.FC = () => {
 
             {/* Right Column: Input Form & History */}
             <div className="md:col-span-1 space-y-6">
-              
+
               <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
                 <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
                   <Plus className="text-sky-500 w-4 h-4" /> Catat Pertumbuhan
                 </h3>
-                
+
                 <form onSubmit={handleAddMeasurement} className="space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1.5">Tanggal Pengukuran *</label>
