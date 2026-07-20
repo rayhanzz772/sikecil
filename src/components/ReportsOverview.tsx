@@ -107,8 +107,7 @@ export const ReportsOverview: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-            <FileText className="text-indigo-600" size={24} />
+          <h1 className="text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
             Laporan & Rekapitulasi Data
           </h1>
           <p className="text-slate-500 text-sm mt-1">Laporan hasil pengukuran dan sebaran status gizi anak.</p>

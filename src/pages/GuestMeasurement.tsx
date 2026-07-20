@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Baby,
@@ -36,6 +36,17 @@ export const GuestMeasurement: React.FC = () => {
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
   const [timeRange, setTimeRange] = useState<string>('0-24m');
   const [isProfileFormOpen, setIsProfileFormOpen] = useState(true);
+
+  // Reset timeRange saat tab berubah (sama seperti legacy)
+  useEffect(() => {
+    const headOnly = ['0-13w'];
+    const nonHead = ['0-6m', '6-24m', '24-60m'];
+    if (activeChartTab === 'head' && nonHead.includes(timeRange)) {
+      setTimeRange('0-24m');
+    } else if (activeChartTab !== 'head' && headOnly.includes(timeRange)) {
+      setTimeRange('0-24m');
+    }
+  }, [activeChartTab]);
 
   // Temporary Form States
   const [profileForm, setProfileForm] = useState({
@@ -359,49 +370,30 @@ export const GuestMeasurement: React.FC = () => {
                     </h2>
                   </div>
 
-                  <div className="flex gap-1.5 bg-slate-100 p-1 rounded-lg w-fit">
+                  {/* Select range dropdown — sama persis dengan legacy */}
+                  <div className="flex gap-2">
                     {activeChartTab === 'head' ? (
-                      <>
-                        <button
-                          onClick={() => setTimeRange('0-13w')}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '0-13w' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          13 Mgg
-                        </button>
-                        <button
-                          onClick={() => setTimeRange('0-24m')}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '0-24m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          2 Thn
-                        </button>
-                        <button
-                          onClick={() => setTimeRange('0-60m')}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '0-60m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          5 Thn
-                        </button>
-                      </>
+                      <select
+                        value={timeRange}
+                        onChange={(e) => setTimeRange(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 cursor-pointer uppercase tracking-wider"
+                      >
+                        <option value="0-13w">0 - 13 Minggu</option>
+                        <option value="0-24m">0 - 2 Tahun</option>
+                        <option value="0-60m">0 - 5 Tahun</option>
+                      </select>
                     ) : (
-                      <>
-                        <button
-                          onClick={() => setTimeRange('0-6m')}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '0-6m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          6 Bln
-                        </button>
-                        <button
-                          onClick={() => setTimeRange('0-24m')}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '0-24m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          2 Thn
-                        </button>
-                        <button
-                          onClick={() => setTimeRange('0-60m')}
-                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all ${timeRange === '24-60m' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-500 hover:text-slate-700'}`}
-                        >
-                          5 Thn
-                        </button>
-                      </>
+                      <select
+                        value={timeRange}
+                        onChange={(e) => setTimeRange(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 text-[11px] font-extrabold rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-1 cursor-pointer uppercase tracking-wider"
+                      >
+                        <option value="0-6m">0 - 6 Bulan (Mingguan)</option>
+                        <option value="0-24m">0 - 2 Tahun</option>
+                        <option value="6-24m">6 Bulan - 2 Tahun</option>
+                        <option value="24-60m">2 - 5 Tahun</option>
+                        <option value="0-60m">0 - 5 Tahun</option>
+                      </select>
                     )}
                   </div>
                 </div>

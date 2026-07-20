@@ -24,7 +24,7 @@ import {
   Building2,
   Settings
 } from 'lucide-react';
-import { Child, Measurement, GrowthStatus, WeightStatus, PredictionResponse } from './types';
+import { Child, Measurement, GrowthStatus, WeightStatus, PredictionResponse, ModelMetrics } from './types';
 import {
   calculateAge,
   formatAgeText,
@@ -965,14 +965,145 @@ export default function App() {
                       </button>
 
                       {predictions && predictions.success && (
-                        <div className="pt-3 border-t border-purple-200/60 space-y-2 mt-2 text-xs">
-                          <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
-                            <span className="text-slate-500 font-semibold">Model AI</span>
-                            <span className="font-bold text-purple-700">{predictions.selected_model}</span>
-                          </div>
-                          <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-purple-100">
-                            <span className="text-slate-500 font-semibold">Error (MAE)</span>
-                            <span className="font-bold text-slate-700">{predictions.metrics?.[predictions.selected_model]?.mae?.toFixed(3) ?? '—'} cm</span>
+                        <div className="pt-3 border-t border-purple-200/60 space-y-3 mt-2">
+                          {/* ═══ SECTION EVALUASI MODEL ═══ */}
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700">⚗ Evaluasi Model</span>
+                              <div className="flex-1 h-px bg-purple-100"></div>
+                            </div>
+
+                            {/* Deskripsi model yang dipilih */}
+                            {predictions.description && (
+                              <div className="bg-purple-50/80 border border-purple-100 rounded-xl p-3 text-[10px] text-slate-600 leading-relaxed">
+                                <p className="font-bold text-purple-700 mb-1">📌 Model Terpilih: {predictions.selected_model}</p>
+                                <p>{predictions.description}</p>
+                              </div>
+                            )}
+
+                            {/* Tabel Perbandingan Semua Model */}
+                            {predictions.metrics && Object.keys(predictions.metrics).length > 0 && (
+                              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div className="bg-slate-50 px-3 py-2 border-b border-slate-100">
+                                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Perbandingan Semua Model</span>
+                                </div>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-[10px]">
+                                    <thead>
+                                      <tr className="border-b border-slate-100">
+                                        <th className="text-left px-3 py-2 text-slate-500 font-bold">Model</th>
+                                        <th className="text-center px-2 py-2 text-slate-500 font-bold">R²</th>
+                                        <th className="text-center px-2 py-2 text-slate-500 font-bold">MAE</th>
+                                        <th className="text-center px-2 py-2 text-slate-500 font-bold">RMSE</th>
+                                        <th className="text-center px-2 py-2 text-slate-500 font-bold">Status</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {(Object.entries(predictions.metrics) as [string, ModelMetrics][])
+                                        .sort(([, a], [, b]) => b.r2 - a.r2) // urutkan dari R² tertinggi
+                                        .map(([modelName, m], idx) => {
+                                          const isSelected = modelName === predictions.selected_model;
+                                          const isBest = idx === 0; // R² tertinggi = terbaik
+                                          return (
+                                            <tr
+                                              key={modelName}
+                                              className={`border-b border-slate-50 last:border-0 ${isSelected ? 'bg-purple-50' : 'hover:bg-slate-50'}`}
+                                            >
+                                              <td className="px-3 py-2.5">
+                                                <div className="flex flex-col gap-0.5">
+                                                  <span className={`font-bold ${isSelected ? 'text-purple-700' : 'text-slate-700'}`}>
+                                                    {modelName}
+                                                  </span>
+                                                </div>
+                                              </td>
+                                              <td className="text-center px-2 py-2.5">
+                                                <span className={`font-bold ${m.r2 >= 0.95 ? 'text-emerald-600' : m.r2 >= 0.8 ? 'text-amber-600' : 'text-red-500'}`}>
+                                                  {m.r2.toFixed(4)}
+                                                </span>
+                                              </td>
+                                              <td className="text-center px-2 py-2.5">
+                                                <span className={`font-bold ${m.mae <= 0.5 ? 'text-emerald-600' : m.mae <= 2 ? 'text-amber-600' : 'text-red-500'}`}>
+                                                  {m.mae < 0.01 ? m.mae.toFixed(6) : m.mae.toFixed(3)}
+                                                </span>
+                                              </td>
+                                              <td className="text-center px-2 py-2.5">
+                                                <span className={`font-bold ${m.rmse <= 0.5 ? 'text-emerald-600' : m.rmse <= 2 ? 'text-amber-600' : 'text-red-500'}`}>
+                                                  {m.rmse < 0.01 ? m.rmse.toFixed(6) : m.rmse.toFixed(3)}
+                                                </span>
+                                              </td>
+                                              <td className="text-center px-2 py-2.5">
+                                                <div className="flex flex-col items-center gap-1">
+                                                  {isBest && (
+                                                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[9px] font-bold whitespace-nowrap">
+                                                      ★ Terbaik
+                                                    </span>
+                                                  )}
+                                                  {isSelected && (
+                                                    <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full text-[9px] font-bold whitespace-nowrap">
+                                                      ✓ Digunakan
+                                                    </span>
+                                                  )}
+                                                  {!isBest && !isSelected && (
+                                                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[9px] font-semibold">
+                                                      Alternatif
+                                                    </span>
+                                                  )}
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                    </tbody>
+                                  </table>
+                                </div>
+
+                                {/* Legend Metrik */}
+                                <div className="px-3 py-2.5 bg-slate-50 border-t border-slate-100 space-y-1.5">
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Keterangan Metrik:</p>
+                                  <div className="grid grid-cols-1 gap-1 text-[9px] text-slate-500">
+                                    <div className="flex gap-1.5">
+                                      <span className="font-bold text-slate-700 shrink-0">R²</span>
+                                      <span>— Koefisien determinasi (mendekati <span className="text-emerald-600 font-bold">1.0 = sangat akurat</span>)</span>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                      <span className="font-bold text-slate-700 shrink-0">MAE</span>
+                                      <span>— Rata-rata error absolut (<span className="text-emerald-600 font-bold">mendekati 0 = lebih baik</span>)</span>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                      <span className="font-bold text-slate-700 shrink-0">RMSE</span>
+                                      <span>— Akar rata-rata kuadrat error (<span className="text-emerald-600 font-bold">mendekati 0 = lebih baik</span>)</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Kesimpulan Pemilihan Model */}
+                            {predictions.metrics && Object.keys(predictions.metrics).length > 1 && (() => {
+                              const sortedModels = (Object.entries(predictions.metrics) as [string, ModelMetrics][]).sort(([, a], [, b]) => b.r2 - a.r2);
+                              const bestModel = sortedModels[0][0];
+                              const bestMetrics = sortedModels[0][1];
+                              const isSelectedAlsoBest = bestModel === predictions.selected_model;
+                              return (
+                                <div className={`rounded-xl p-3 border text-[10px] space-y-1 ${isSelectedAlsoBest ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+                                  <p className={`font-bold ${isSelectedAlsoBest ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                    {isSelectedAlsoBest ? '✅ Kesimpulan Evaluasi' : '💡 Kesimpulan Evaluasi'}
+                                  </p>
+                                  <p className={`leading-relaxed ${isSelectedAlsoBest ? 'text-emerald-600' : 'text-amber-700'}`}>
+                                    {isSelectedAlsoBest
+                                      ? `Model "${bestModel}" dipilih karena memiliki performa terbaik dengan R² = ${bestMetrics.r2.toFixed(4)} dan MAE terkecil (${bestMetrics.mae < 0.01 ? bestMetrics.mae.toFixed(6) : bestMetrics.mae.toFixed(3)} cm). Model ini paling akurat untuk memprediksi pertumbuhan anak ini.`
+                                      : `Model "${predictions.selected_model}" digunakan sebagai model utama. Model "${bestModel}" memiliki R² lebih tinggi (${bestMetrics.r2.toFixed(4)}) namun "${predictions.selected_model}" diprioritaskan karena mempertimbangkan karakteristik data anak.`
+                                    }
+                                  </p>
+                                </div>
+                              );
+                            })()}
+
+                            {/* Info versi & data history */}
+                            <div className="flex items-center justify-between text-[9px] text-slate-400 px-1">
+                              <span>Versi engine: <span className="font-bold">{predictions.version ?? 'v3'}</span></span>
+                              <span>Data historis: <span className="font-bold">{predictions.n_history} titik</span></span>
+                            </div>
                           </div>
                         </div>
                       )}

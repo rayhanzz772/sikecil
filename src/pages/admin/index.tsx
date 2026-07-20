@@ -1,5 +1,6 @@
 export * from './RoleManagement';
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Pagination } from '../../components/Pagination';
 import { desaService, Desa } from '../../services/desaService';
 import { Edit2, Trash2, Plus, X } from 'lucide-react';
@@ -823,6 +824,7 @@ export const MasterPosyandu: React.FC = () => {
 };
 
 export const AdminChildrenData: React.FC = () => {
+  const navigate = useNavigate();
   const [childrenData, setChildrenData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -858,7 +860,6 @@ export const AdminChildrenData: React.FC = () => {
   return (
     <div className="space-y-4">
       <h1 className="text-lg font-bold text-slate-800">Data Anak (Global)</h1>
-
       <div className="bg-white p-3 rounded-lg border border-slate-200">
         <label className="block text-xs font-medium text-slate-500 mb-1">Pencarian</label>
         <input
@@ -887,6 +888,7 @@ export const AdminChildrenData: React.FC = () => {
                   <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tgl Lahir</th>
                   <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Posyandu</th>
                   <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Orang Tua</th>
+                  <th className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 text-center w-20">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -907,6 +909,14 @@ export const AdminChildrenData: React.FC = () => {
                     </td>
                     <td className="px-3 py-1.5 text-sky-700 font-medium text-xs">{child.user?.posyandu?.name || '-'}</td>
                     <td className="px-3 py-1.5 text-slate-600 text-xs">{child.user.name || '-'}</td>
+                    <td className="px-3 py-1.5 text-center">
+                      <button
+                        onClick={() => navigate(`/admin/children/${child.id}`)}
+                        className="px-2 py-1 text-sky-700 font-medium rounded hover:bg-sky-50 border border-slate-200 text-xs inline-flex items-center gap-1 transition-colors"
+                      >
+                        Detail
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

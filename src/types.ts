@@ -66,6 +66,11 @@ export interface ModelMetrics {
   rmse: number;
 }
 
+export interface ModelComparisonPoint {
+  age: number;
+  value: number;
+}
+
 export interface PredictionResponse {
   metrics: Record<string, ModelMetrics>;
   n_history: number;
@@ -73,4 +78,7 @@ export interface PredictionResponse {
   selected_model: string;
   skipped_models: string[];
   success: boolean;
+  description?: string;
+  version?: string;
+  model_comparisons?: Record<string, ModelComparisonPoint[]>;
 }

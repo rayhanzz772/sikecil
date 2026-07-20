@@ -11,7 +11,8 @@ import {
   Activity,
   LogOut,
   BrainCircuit,
-  ShieldCheck
+  ShieldCheck,
+  UserPlus
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -30,6 +31,7 @@ export const Sidebar: React.FC = () => {
   const nakesLinks = [
     { to: '/nakes/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/nakes/children', icon: <Baby size={20} />, label: 'Data Anak' },
+    { to: '/nakes/ortu', icon: <UserPlus size={20} />, label: 'Kelola Ortu' },
     { to: '/nakes/reports', icon: <FileText size={20} />, label: 'Laporan' }
   ];
 

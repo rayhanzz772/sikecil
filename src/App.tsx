@@ -32,7 +32,8 @@ import {
   HistoryChart,
   Prediction,
   ChildDetail,
-  NakesReports
+  NakesReports,
+  NakesOrtuManagement
 } from './pages/nakes';
 
 // Ortu Pages
@@ -64,6 +65,7 @@ export default function App() {
                   <Route path="/admin/villages" element={<MasterDesa />} />
                   <Route path="/admin/posyandu" element={<MasterPosyandu />} />
                   <Route path="/admin/children" element={<AdminChildrenData />} />
+                  <Route path="/admin/children/:childId" element={<ChildDetail />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
                 </Route>
 
@@ -77,6 +79,7 @@ export default function App() {
                     <Route path="/nakes/history" element={<HistoryChart />} />
                     <Route path="/nakes/prediction" element={<Prediction />} />
                     <Route path="/nakes/reports" element={<NakesReports />} />
+                    <Route path="/nakes/ortu" element={<NakesOrtuManagement />} />
                   </Route>
                 </Route>
 
