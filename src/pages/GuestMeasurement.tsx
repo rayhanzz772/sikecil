@@ -9,9 +9,10 @@ import {
   Trash2,
   Plus,
   Info,
-  Calendar
+  Calendar,
+  Sparkles
 } from 'lucide-react';
-import { Gender, Measurement } from '../types';
+import { Gender, Measurement, PredictionResponse } from '../types';
 import {
   calculateAge,
   getStuntingStatus,
@@ -19,6 +20,8 @@ import {
   getHeadCircumferenceStatus
 } from '../utils/whoStandards';
 import GrowthChart from '../components/GrowthChart';
+import { useToast } from '../components/Toast';
+import { predictionService } from '../services/predictionService';
 
 export const GuestMeasurement: React.FC = () => {
   const navigate = useNavigate();
@@ -31,6 +34,11 @@ export const GuestMeasurement: React.FC = () => {
   } | null>(null);
 
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
+
+  // Prediction State
+  const [predictions, setPredictions] = useState<PredictionResponse | null>(null);
+  const [isPredicting, setIsPredicting] = useState(false);
+  const toast = useToast();
 
   // UI State
   const [activeChartTab, setActiveChartTab] = useState<'height' | 'weight' | 'head'>('height');
@@ -113,6 +121,42 @@ export const GuestMeasurement: React.FC = () => {
   const handleDeleteMeasurement = (id: string) => {
     setMeasurements(prev => prev.filter(m => m.id !== id));
   };
+
+  const handleGeneratePrediction = async () => {
+    if (!childProfile) return;
+    if (measurements.length < 3) {
+      toast.info('Butuh minimal 3 data pengukuran untuk prediksi AI');
+      return;
+    }
+    setIsPredicting(true);
+    try {
+      const history = measurements.map(m => ({
+        age: m.ageMonths,
+        height: m.height,
+        weight: m.weight,
+        head_circ: m.headCircumference || null
+      }));
+
+      const res = await predictionService.generateGuest({
+        sex: childProfile.gender === 'Laki-laki' || childProfile.gender === 'L' ? 'L' : 'P',
+        history,
+        horizon: 6
+      });
+      
+      let results = res.results || res.prediction || res;
+      if (typeof results === 'string') {
+        try { results = JSON.parse(results); } catch (e) {}
+      }
+      setPredictions(results);
+      toast.success('Prediksi berhasil dihasilkan!');
+    } catch (error: any) {
+      console.error('Failed to generate prediction:', error);
+      toast.error(error?.response?.data?.error || error?.response?.data?.message || 'Gagal memproses prediksi AI');
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
 
   const latestMeasurement = measurements.length > 0 ? measurements[measurements.length - 1] : null;
 
@@ -370,8 +414,32 @@ export const GuestMeasurement: React.FC = () => {
                     </h2>
                   </div>
 
-                  {/* Select range dropdown — sama persis dengan legacy */}
                   <div className="flex gap-2">
+                    <button
+                      onClick={handleGeneratePrediction}
+                      disabled={isPredicting || measurements.length < 3}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${
+                        measurements.length < 3
+                          ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed'
+                          : isPredicting
+                          ? 'bg-indigo-50 text-indigo-400 border-indigo-200 cursor-wait'
+                          : 'bg-white text-indigo-600 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm'
+                      }`}
+                      title={measurements.length < 3 ? 'Butuh minimal 3 data pengukuran' : 'Generate Prediksi AI'}
+                    >
+                      {isPredicting ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                          Memproses...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          Prediksi AI
+                        </>
+                      )}
+                    </button>
+
                     {activeChartTab === 'head' ? (
                       <select
                         value={timeRange}
@@ -435,6 +503,7 @@ export const GuestMeasurement: React.FC = () => {
                     measurements={measurements}
                     timeRange={timeRange}
                     chartType={activeChartTab}
+                    predictions={predictions?.prediction}
                   />
                 </div>
 

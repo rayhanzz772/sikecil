@@ -22,6 +22,11 @@ export const predictionService = {
     return response.data;
   },
 
+  generateGuest: async (payload: { sex: string, history: any[], horizon?: number }) => {
+    const response = await api.post(`/guest/predictions`, payload);
+    return response.data;
+  },
+
   getLatest: async (childId: string): Promise<{ data: LatestPredictionResponse }> => {
     const response = await api.get(`/children/${childId}/predictions/latest`);
     return response.data;
