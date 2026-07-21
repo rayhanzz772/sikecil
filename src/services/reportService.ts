@@ -33,5 +33,17 @@ export const reportService = {
   getChildGrowth: async (id: string) => {
     const response = await api.get(`/reports/child-growth/${id}`);
     return response.data;
+  },
+
+  downloadPdf: async (endpoint: string, params?: any, filename: string = 'report.pdf') => {
+    const response = await api.get(endpoint, { params, responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { reportService, ReportFilter } from '../services/reportService';
-import { FileText, Filter, Activity, Search, X } from 'lucide-react';
+import { FileText, Filter, Activity, Search, X, Download } from 'lucide-react';
 import { Pagination } from './Pagination';
 
 export const ReportsOverview: React.FC = () => {
@@ -13,6 +13,7 @@ export const ReportsOverview: React.FC = () => {
 
   const [selectedChildGrowth, setSelectedChildGrowth] = useState<any>(null);
   const [isModalLoading, setIsModalLoading] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const currentDate = new Date();
   const [filter, setFilter] = useState<ReportFilter>({
@@ -90,6 +91,43 @@ export const ReportsOverview: React.FC = () => {
   };
 
   const closeModal = () => setSelectedChildGrowth(null);
+
+  const handleDownloadPdf = async () => {
+    setIsDownloading(true);
+    try {
+      let endpoint = '';
+      let filename = '';
+      
+      const monthStr = filter.month ? filter.month.toString() : 'all';
+      const yearStr = filter.year ? filter.year.toString() : 'all';
+
+      switch (activeTab) {
+        case 'ringkasan':
+          endpoint = '/reports/nutrition-summary/pdf';
+          filename = `ringkasan_status_gizi_${monthStr}_${yearStr}.pdf`;
+          break;
+        case 'detail':
+          endpoint = '/reports/measurements/pdf';
+          filename = `detail_pengukuran_${monthStr}_${yearStr}.pdf`;
+          break;
+        case 'berisiko':
+          endpoint = '/reports/at-risk/pdf';
+          filename = `anak_berisiko_${monthStr}_${yearStr}.pdf`;
+          break;
+        case 'aktivitas':
+          endpoint = '/reports/posyandu-activity/pdf';
+          filename = `aktivitas_posyandu_${monthStr}_${yearStr}.pdf`;
+          break;
+      }
+
+      await reportService.downloadPdf(endpoint, filter, filename);
+    } catch (error) {
+      console.error('Failed to download PDF:', error);
+      alert('Gagal mengunduh PDF. Silakan coba lagi.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const months = [
     { value: 1, label: 'Januari' }, { value: 2, label: 'Februari' },
@@ -174,34 +212,54 @@ export const ReportsOverview: React.FC = () => {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl w-max mb-6 gap-1">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl w-max gap-1">
+              <button
+                onClick={() => { setActiveTab('ringkasan'); setPage(1); }}
+                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'ringkasan' ? 'bg-white shadow-sm text-black' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                Ringkasan Status Gizi
+              </button>
+              <button
+                onClick={() => { setActiveTab('detail'); setPage(1); }}
+                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'detail' ? 'bg-white shadow-sm text-black' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                Detail Pengukuran
+              </button>
+              <button
+                onClick={() => { setActiveTab('berisiko'); setPage(1); }}
+                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'berisiko' ? 'bg-white shadow-sm text-rose-700' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                Anak Berisiko
+              </button>
+              <button
+                onClick={() => { setActiveTab('aktivitas'); setPage(1); }}
+                className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'aktivitas' ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                Aktivitas Posyandu
+              </button>
+            </div>
+            
             <button
-              onClick={() => { setActiveTab('ringkasan'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'ringkasan' ? 'bg-white shadow-sm text-black' : 'text-slate-500 hover:text-slate-700'
-                }`}
+              onClick={handleDownloadPdf}
+              disabled={isDownloading}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-all disabled:opacity-50"
             >
-              Ringkasan Status Gizi
-            </button>
-            <button
-              onClick={() => { setActiveTab('detail'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'detail' ? 'bg-white shadow-sm text-black' : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              Detail Pengukuran
-            </button>
-            <button
-              onClick={() => { setActiveTab('berisiko'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'berisiko' ? 'bg-white shadow-sm text-rose-700' : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              Anak Berisiko
-            </button>
-            <button
-              onClick={() => { setActiveTab('aktivitas'); setPage(1); }}
-              className={`px-4 sm:px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'aktivitas' ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              Aktivitas Posyandu
+              {isDownloading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Mengunduh...
+                </>
+              ) : (
+                <>
+                  <Download size={16} />
+                  Download PDF
+                </>
+              )}
             </button>
           </div>
 
@@ -224,10 +282,10 @@ export const ReportsOverview: React.FC = () => {
                       Tinggi Badan (Stunting)
                     </div>
                     <ul className="divide-y divide-slate-50 text-sm">
-                      <li className="flex justify-between px-4 py-2 text-slate-600">Normal <span className="font-bold text-slate-800">{summary.haz_distribution?.normal || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-rose-600 font-medium">Stunting <span className="font-bold">{summary.haz_distribution?.stunting || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-rose-700 font-bold">Sev. Stunting <span>{summary.haz_distribution?.severe_stunting || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-sky-600">Tinggi <span className="font-bold">{summary.haz_distribution?.tinggi || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-slate-600 font-medium">Normal <span className="font-bold text-slate-800">{summary.haz_distribution?.normal || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-amber-600 font-medium">Stunting <span className="font-bold">{summary.haz_distribution?.stunting || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-rose-600 font-medium">Sev. Stunting <span className="font-bold">{summary.haz_distribution?.severe_stunting || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-amber-600 font-medium">Tinggi <span className="font-bold">{summary.haz_distribution?.tinggi || 0}</span></li>
                     </ul>
                   </div>
 
@@ -237,10 +295,10 @@ export const ReportsOverview: React.FC = () => {
                       Berat Badan (Underweight)
                     </div>
                     <ul className="divide-y divide-slate-50 text-sm">
-                      <li className="flex justify-between px-4 py-2 text-slate-600">Normal <span className="font-bold text-slate-800">{summary.waz_distribution?.normal || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-slate-600 font-medium">Normal <span className="font-bold text-slate-800">{summary.waz_distribution?.normal || 0}</span></li>
                       <li className="flex justify-between px-4 py-2 text-amber-600 font-medium">Underweight <span className="font-bold">{summary.waz_distribution?.underweight || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-rose-600 font-bold">Sev. Underweight <span>{summary.waz_distribution?.severe_underweight || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-orange-500">Risiko Lebih <span className="font-bold">{summary.waz_distribution?.overweight || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-rose-600 font-medium">Sev. Underweight <span className="font-bold">{summary.waz_distribution?.severe_underweight || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-amber-600 font-medium">Risiko Lebih <span className="font-bold">{summary.waz_distribution?.overweight || 0}</span></li>
                     </ul>
                   </div>
 
@@ -250,10 +308,10 @@ export const ReportsOverview: React.FC = () => {
                       Lingkar Kepala
                     </div>
                     <ul className="divide-y divide-slate-50 text-sm">
-                      <li className="flex justify-between px-4 py-2 text-slate-600">Normal <span className="font-bold text-slate-800">{summary.hcaz_distribution?.normal || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-slate-600 font-medium">Normal <span className="font-bold text-slate-800">{summary.hcaz_distribution?.normal || 0}</span></li>
                       <li className="flex justify-between px-4 py-2 text-amber-600 font-medium">Mikrosefali <span className="font-bold">{summary.hcaz_distribution?.mikrosefali || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-rose-600 font-bold">Sev. Mikrosefali <span>{summary.hcaz_distribution?.severe_mikrosefali || 0}</span></li>
-                      <li className="flex justify-between px-4 py-2 text-violet-600">Makrosefali <span className="font-bold">{summary.hcaz_distribution?.makrosefali || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-rose-600 font-medium">Sev. Mikrosefali <span className="font-bold">{summary.hcaz_distribution?.severe_mikrosefali || 0}</span></li>
+                      <li className="flex justify-between px-4 py-2 text-amber-600 font-medium">Makrosefali <span className="font-bold">{summary.hcaz_distribution?.makrosefali || 0}</span></li>
                     </ul>
                   </div>
                 </div>
