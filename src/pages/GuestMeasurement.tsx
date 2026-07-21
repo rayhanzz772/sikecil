@@ -143,7 +143,7 @@ export const GuestMeasurement: React.FC = () => {
         horizon: 6
       });
       
-      let results = res.results || res.prediction || res;
+      let results = res.data || res.results || res.prediction || res;
       if (typeof results === 'string') {
         try { results = JSON.parse(results); } catch (e) {}
       }
