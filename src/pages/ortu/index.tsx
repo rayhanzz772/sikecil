@@ -24,11 +24,7 @@ export const OrtuDashboard: React.FC = () => {
           
           const tipMonth = latestTip.month || month;
           const tipYear = latestTip.year || year;
-          const hasSeenTips = sessionStorage.getItem(`hasSeenOrtuTips_${tipMonth}_${tipYear}`);
-          if (!hasSeenTips) {
-            setShowTips(true);
-            sessionStorage.setItem(`hasSeenOrtuTips_${tipMonth}_${tipYear}`, 'true');
-          }
+          setShowTips(true);
         }
       } catch (error) {
         console.error('Failed to fetch monthly tip:', error);
