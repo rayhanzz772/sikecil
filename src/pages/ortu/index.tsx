@@ -16,14 +16,18 @@ export const OrtuDashboard: React.FC = () => {
         const month = currentDate.getMonth() + 1;
         const year = currentDate.getFullYear();
         
-        const response = await tipsService.getTips({ month, year, per_page: 1 });
+        // Fetch latest tip (ordered by year DESC, month DESC in backend)
+        const response = await tipsService.getTips({ per_page: 1 });
         if (response.data && response.data.length > 0) {
-          setTipData(response.data[0]);
+          const latestTip = response.data[0];
+          setTipData(latestTip);
           
-          const hasSeenTips = sessionStorage.getItem(`hasSeenOrtuTips_${month}_${year}`);
+          const tipMonth = latestTip.month || month;
+          const tipYear = latestTip.year || year;
+          const hasSeenTips = sessionStorage.getItem(`hasSeenOrtuTips_${tipMonth}_${tipYear}`);
           if (!hasSeenTips) {
             setShowTips(true);
-            sessionStorage.setItem(`hasSeenOrtuTips_${month}_${year}`, 'true');
+            sessionStorage.setItem(`hasSeenOrtuTips_${tipMonth}_${tipYear}`, 'true');
           }
         }
       } catch (error) {
