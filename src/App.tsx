@@ -22,7 +22,8 @@ import {
   MasterPosyandu,
   AdminChildrenData,
   AdminReports,
-  RoleManagement
+  RoleManagement,
+  MasterTips
 } from './pages/admin';
 
 import {
@@ -67,6 +68,7 @@ export default function App() {
                   <Route path="/admin/children" element={<AdminChildrenData />} />
                   <Route path="/admin/children/:childId" element={<ChildDetail />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/tips" element={<MasterTips />} />
                 </Route>
 
                 {/* Nakes Routes */}
@@ -80,6 +82,7 @@ export default function App() {
                     <Route path="/nakes/prediction" element={<Prediction />} />
                     <Route path="/nakes/reports" element={<NakesReports />} />
                     <Route path="/nakes/ortu" element={<NakesOrtuManagement />} />
+                    <Route path="/nakes/tips" element={<MasterTips />} />
                   </Route>
                 </Route>
 

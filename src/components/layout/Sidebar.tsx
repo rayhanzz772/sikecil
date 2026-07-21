@@ -12,7 +12,8 @@ import {
   LogOut,
   BrainCircuit,
   ShieldCheck,
-  UserPlus
+  UserPlus,
+  Lightbulb
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
@@ -26,13 +27,15 @@ export const Sidebar: React.FC = () => {
     { to: '/admin/posyandu', icon: <Building2 size={20} />, label: 'Master Posyandu' },
     { to: '/admin/children', icon: <Baby size={20} />, label: 'Data Anak' },
     { to: '/admin/reports', icon: <FileText size={20} />, label: 'Laporan' },
+    { to: '/admin/tips', icon: <Lightbulb size={20} />, label: 'Master Tips' },
   ];
 
   const nakesLinks = [
     { to: '/nakes/dashboard', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/nakes/children', icon: <Baby size={20} />, label: 'Data Anak' },
     { to: '/nakes/ortu', icon: <UserPlus size={20} />, label: 'Kelola Ortu' },
-    { to: '/nakes/reports', icon: <FileText size={20} />, label: 'Laporan' }
+    { to: '/nakes/reports', icon: <FileText size={20} />, label: 'Laporan' },
+    { to: '/nakes/tips', icon: <Lightbulb size={20} />, label: 'Tips Bulanan' }
   ];
 
   const links = user?.role === 'admin' ? adminLinks : nakesLinks;

@@ -2,17 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import AppLegacy from '../../App.legacy';
 import { X, Lightbulb, Activity, ArrowRight } from 'lucide-react';
+import { tipsService } from '../../services/tipsService';
 
 export const OrtuDashboard: React.FC = () => {
   const { user } = useAuth();
   const [showTips, setShowTips] = useState(false);
+  const [tipData, setTipData] = useState<any>(null);
 
   useEffect(() => {
-    const hasSeenTips = sessionStorage.getItem('hasSeenOrtuTips');
-    if (!hasSeenTips) {
-      setShowTips(true);
-      sessionStorage.setItem('hasSeenOrtuTips', 'true');
-    }
+    const fetchMonthlyTip = async () => {
+      try {
+        const currentDate = new Date();
+        const month = currentDate.getMonth() + 1;
+        const year = currentDate.getFullYear();
+        
+        const response = await tipsService.getTips({ month, year, per_page: 1 });
+        if (response.data && response.data.length > 0) {
+          setTipData(response.data[0]);
+          
+          const hasSeenTips = sessionStorage.getItem(`hasSeenOrtuTips_${month}_${year}`);
+          if (!hasSeenTips) {
+            setShowTips(true);
+            sessionStorage.setItem(`hasSeenOrtuTips_${month}_${year}`, 'true');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch monthly tip:', error);
+      }
+    };
+
+    fetchMonthlyTip();
   }, []);
 
   return (
@@ -29,9 +48,9 @@ export const OrtuDashboard: React.FC = () => {
             {/* Image Header */}
             <div className="relative h-48 bg-gradient-to-br from-sky-50 to-emerald-50 p-6 flex justify-center">
               <img 
-                src="/src/assets/images/stunting_tips.png" 
+                src={tipData?.image || "/src/assets/images/stunting_tips.png"} 
                 alt="Parenting Tips" 
-                className="h-full object-contain drop-shadow-md"
+                className="h-full object-contain drop-shadow-md rounded-xl"
               />
               <button
                 onClick={() => setShowTips(false)}
@@ -49,11 +68,11 @@ export const OrtuDashboard: React.FC = () => {
               </div>
               
               <h2 className="text-xl font-extrabold text-slate-800 leading-tight">
-                Cegah Stunting dengan <span className="text-emerald-600">Gizi Seimbang</span>
+                {tipData?.title || 'Tips Kesehatan'}
               </h2>
               
               <p className="text-sm text-slate-500 leading-relaxed px-2">
-                Pastikan si kecil mendapatkan asupan gizi yang cukup dengan menu kaya protein hewani (seperti telur, ikan, atau ayam). Selalu pantau pertumbuhannya setiap bulan di Posyandu ya, Bunda!
+                {tipData?.description || 'Pastikan si kecil mendapatkan asupan gizi yang cukup. Selalu pantau pertumbuhannya setiap bulan di Posyandu!'}
               </p>
               
               <div className="pt-4 pb-2">
