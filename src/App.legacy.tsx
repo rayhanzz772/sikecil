@@ -50,6 +50,31 @@ const getCurrentDateMinusMonths = (months: number): string => {
   return d.toISOString().split('T')[0];
 };
 
+const getChildAge = (birthDate: string): string => {
+  if (!birthDate) return '';
+
+  const birth = new Date(birthDate);
+  const today = new Date();
+
+  let years = today.getFullYear() - birth.getFullYear();
+  let months = today.getMonth() - birth.getMonth();
+
+  if (today.getDate() < birth.getDate()) {
+    months--;
+  }
+
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  if (years > 0) {
+    return `${years} th ${months} bln`;
+  }
+
+  return `${months} bln`;
+};
+
 
 // Seed Data
 const DEFAULT_CHILDREN: Child[] = [
@@ -699,7 +724,7 @@ export default function App() {
                     >
                       {children.map(c => (
                         <option key={c.id} value={c.id}>
-                          {c.name} ({c.gender === 'Laki-laki' ? 'L' : 'P'})
+                          {c.name} ({c.gender === 'Laki-laki' ? 'L' : 'P'}) • {getChildAge(c.birthDate)}
                         </option>
                       ))}
                     </select>
@@ -922,24 +947,138 @@ export default function App() {
                       />
                     </div>
 
-                    {/* Chart Legend Explanation */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-slate-500 font-semibold bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-1.5 bg-[#10b981] inline-block rounded-full"></span>
-                        Median (Ideal)
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
-                        {activeChartTab === 'height' ? 'Ambang Stunting (-2 SD)' : activeChartTab === 'weight' ? 'Batas Kurang (-2 SD)' : 'Batas Kecil (-2 SD)'}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
-                        {activeChartTab === 'height' ? 'Stunting Berat (-3 SD)' : activeChartTab === 'weight' ? 'Sangat Kurang (-3 SD)' : 'Sangat Kecil (-3 SD)'}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 bg-[#0284c7] inline-block rounded-full"></span>
-                        Pertumbuhan Anak
-                      </div>
+                    {/* Keterangan Grafik */}
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mt-4">
+                      
+                      {/* ==================== TINGGI BADAN (TB/U - HAZ) ==================== */}
+                      {activeChartTab === 'height' && (
+                        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 text-[10px] text-slate-500 font-semibold">
+
+                          {/* -3 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
+                            <span>Sangat Pendek / Stunting Berat (-3 SD)</span>
+                          </div>
+
+                          {/* -2 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
+                            <span>Pendek / Stunting (-2 SD)</span>
+                          </div>
+
+                          {/* Median / 0 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#10b981] inline-block rounded-full"></span>
+                            <span>Normal (Median / 0 SD)</span>
+                          </div>
+
+                          {/* +2 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
+                            <span>Normal (+2 SD)</span>
+                          </div>
+
+                          {/* +3 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
+                            <span>Tinggi (≥ +3 SD)</span>
+                          </div>
+
+                          {/* Pertumbuhan Anak */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 bg-[#0284c7] inline-block rounded-full"></span>
+                            <span>Pertumbuhan Anak</span>
+                          </div>
+
+                        </div>
+                      )}
+
+                      {/* ==================== BERAT BADAN (BB/U - WAZ) ==================== */}
+                      {activeChartTab === 'weight' && (
+                        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 text-[10px] text-slate-500 font-semibold">
+
+                          {/* -3 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
+                            <span>BB Sangat Kurang (-3 SD)</span>
+                          </div>
+
+                          {/* -2 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
+                            <span>BB Kurang (-2 SD)</span>
+                          </div>
+
+                          {/* Median / Normal */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#10b981] inline-block rounded-full"></span>
+                            <span>Normal (Median / 0 SD)</span>
+                          </div>
+
+                          {/* +2 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
+                            <span>Batas Atas (+2 SD)</span>
+                          </div>
+
+                          {/* +3 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
+                            <span>Batas Atas Ekstrem (+3 SD)</span>
+                          </div>
+
+                          {/* Pertumbuhan Anak */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 bg-[#0284c7] inline-block rounded-full"></span>
+                            <span>Pertumbuhan Anak</span>
+                          </div>
+
+                        </div>
+                      )}
+
+                      {/* ==================== LINGKAR KEPALA (LK/U - HCFA) ==================== */}
+                      {activeChartTab === 'head' && (
+                        <div className="grid grid-cols-2 sm:grid-cols-6 gap-3 text-[10px] text-slate-500 font-semibold">
+
+                          {/* -3 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
+                            <span>Mikrosefali Berat (-3 SD)</span>
+                          </div>
+
+                          {/* -2 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
+                            <span>Mikrosefali (-2 SD)</span>
+                          </div>
+
+                          {/* Median / 0 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#10b981] inline-block rounded-full"></span>
+                            <span>Normal (Median / 0 SD)</span>
+                          </div>
+
+                          {/* +2 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#eab308] inline-block rounded-full"></span>
+                            <span>Batas Makrosefali (+2 SD)</span>
+                          </div>
+
+                          {/* +3 SD */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-1.5 bg-[#ef4444] inline-block rounded-full"></span>
+                            <span>Makrosefali (+3 SD)</span>
+                          </div>
+
+                          {/* Pertumbuhan Anak */}
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 bg-[#0284c7] inline-block rounded-full"></span>
+                            <span>Pertumbuhan Anak</span>
+                          </div>
+
+                        </div>
+                      )}
+
                     </div>
 
                     {/* Tombol ke halaman Riwayat (pengganti kartu Riwayat lama) */}
