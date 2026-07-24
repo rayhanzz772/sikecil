@@ -167,49 +167,110 @@ export default function GrowthChart({ gender, measurements, timeRange, chartType
   }, [chartData]);
 
   // Custom Tooltip component in Indonesian
+  // Custom Tooltip component in Indonesian
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      // Find the child point if exists, or the hover index
       const data = payload[0].payload;
+
       const ageLabel = data.month === Math.floor(data.month)
         ? `${data.month} Bulan`
-        : `${data.month} Bulan (${data.dateLabel || ''})`;
+        : `${data.month.toFixed(1)} Bulan${data.dateLabel ? ` (${data.dateLabel})` : ''}`;
 
       return (
-        <div className="bg-white p-3 border border-slate-100 rounded-xl shadow-lg text-sm max-w-[280px]">
-          <p className="font-semibold text-slate-800 mb-1.5">{ageLabel}</p>
+        <div className="bg-white p-3 border border-slate-100 rounded-xl shadow-lg text-sm max-w-[300px]">
+          <p className="font-semibold text-slate-800 mb-1.5">
+            {ageLabel}
+          </p>
+
           <div className="space-y-1">
+
+            {/* Data Anak */}
             {data.childValue !== undefined && (
               <p className="text-blue-600 font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                Si Kecil: {data.childValue} {unit}
+                Si Kecil: {Number(data.childValue).toFixed(1)} {unit}
               </p>
             )}
+
+            {/* Prediksi */}
             {data.predictionValue !== undefined && (
               <p className="text-purple-600 font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                 Prediksi AI: {Number(data.predictionValue).toFixed(1)} {unit}
               </p>
             )}
-            <p className="text-slate-500 text-xs border-t border-slate-50 pt-1 mt-1">
+
+            <p className="text-slate-500 text-xs border-t border-slate-100 pt-1.5 mt-1.5">
               Referensi WHO:
             </p>
-            <p className={`${tooltipMedianText} flex items-center gap-1.5 text-xs`}>
-              <span className={`w-2 h-2 rounded-full ${tooltipMedianDot}`}></span>
-              Median (Ideal): {data.median} {unit}
-            </p>
-            <p className="text-amber-600 flex items-center gap-1.5 text-xs">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-              {chartType === 'height' ? 'Batas Normal (-2 SD):' : chartType === 'weight' ? 'Batas Kurang (-2 SD):' : 'Batas Kecil (-2 SD):'} {data.sd2neg} {unit}
-            </p>
+
+            {/* -3 SD */}
             <p className="text-red-500 flex items-center gap-1.5 text-xs">
               <span className="w-2 h-2 rounded-full bg-red-500"></span>
-              {chartType === 'height' ? 'Stunting (-3 SD):' : chartType === 'weight' ? 'Sangat Kurang (-3 SD):' : 'Sangat Kecil (-3 SD):'} {data.sd3neg} {unit}
+
+              {chartType === 'height'
+                ? 'Sangat Pendek (-3 SD):'
+                : chartType === 'weight'
+                  ? 'BB Sangat Kurang (-3 SD):'
+                  : 'Mikrosefali Berat (-3 SD):'
+              }
+
+              {' '}{data.sd3neg} {unit}
             </p>
+
+            {/* -2 SD */}
+            <p className="text-amber-600 flex items-center gap-1.5 text-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+
+              {chartType === 'height'
+                ? 'Batas Pendek (-2 SD):'
+                : chartType === 'weight'
+                  ? 'Batas BB Kurang (-2 SD):'
+                  : 'Batas Mikrosefali (-2 SD):'
+              }
+
+              {' '}{data.sd2neg} {unit}
+            </p>
+
+            {/* Median */}
+            <p className={`${tooltipMedianText} flex items-center gap-1.5 text-xs`}>
+              <span className={`w-2 h-2 rounded-full ${tooltipMedianDot}`}></span>
+              Median (0 SD): {data.median} {unit}
+            </p>
+
+            {/* +2 SD */}
+            <p className="text-amber-600 flex items-center gap-1.5 text-xs">
+              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+
+              {chartType === 'height'
+                ? 'Normal (+2 SD):'
+                : chartType === 'weight'
+                  ? 'Batas Atas (+2 SD):'
+                  : 'Batas Makrosefali (+2 SD):'
+              }
+
+              {' '}{data.sd2pos} {unit}
+            </p>
+
+            {/* +3 SD */}
+            <p className="text-purple-600 flex items-center gap-1.5 text-xs">
+              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+
+              {chartType === 'height'
+                ? 'Tinggi (+3 SD):'
+                : chartType === 'weight'
+                  ? 'Batas Atas Ekstrem (+3 SD):'
+                  : 'Makrosefali (+3 SD):'
+              }
+
+              {' '}{data.sd3pos} {unit}
+            </p>
+
           </div>
         </div>
       );
     }
+
     return null;
   };
 

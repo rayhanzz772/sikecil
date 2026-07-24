@@ -160,6 +160,19 @@ export const GuestMeasurement: React.FC = () => {
 
   const latestMeasurement = measurements.length > 0 ? measurements[measurements.length - 1] : null;
 
+  const currentAge = childProfile
+    ? calculateAge(
+        childProfile.birthDate,
+        new Date().toISOString().split('T')[0]
+      )
+    : null;
+
+  const currentAgeText = currentAge
+    ? currentAge.years > 0
+      ? `${currentAge.years} tahun ${currentAge.months} bulan`
+      : `${currentAge.months} bulan`
+    : '-';
+
   const isGirl = childProfile?.gender === 'Perempuan' || childProfile?.gender === 'P';
   const theme = isGirl ? {
     bgLight: 'bg-pink-50',
@@ -314,14 +327,30 @@ export const GuestMeasurement: React.FC = () => {
                   <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${theme.gradient} shadow-sm flex items-center justify-center text-white font-extrabold text-xl`}>
                     {(childProfile.name || 'A').charAt(0).toUpperCase()}
                   </div>
+                  
                   <div>
                     <h2 className="text-xl font-bold text-slate-800 leading-tight">
                       {childProfile.name || 'Anak Guest'}
                     </h2>
-                    <p className="text-sm text-slate-500 font-medium mt-0.5">
-                      {childProfile.gender === 'P' || childProfile.gender === 'Perempuan' ? 'Perempuan' : 'Laki-laki'} • Lahir: {new Date(childProfile.birthDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+
+                    <p className="text-sm text-slate-600 font-semibold mt-1">
+                      {childProfile.gender === 'P' || childProfile.gender === 'Perempuan'
+                        ? 'Perempuan'
+                        : 'Laki-laki'}
+                      {' • '}
+                      Usia: {currentAgeText}
+                    </p>
+
+                    <p className="text-xs text-slate-400 font-medium mt-0.5">
+                      Lahir:{' '}
+                      {new Date(childProfile.birthDate).toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
                     </p>
                   </div>
+
                 </div>
                 <button
                   onClick={() => setIsProfileFormOpen(true)}
